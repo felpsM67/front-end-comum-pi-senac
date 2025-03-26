@@ -24,10 +24,28 @@ export function UserManagement() {
   const navigate = useNavigate();
 
   useEffect(() => {
-    fetch("http://localhost:3000/users")
-      .then((response) => response.json())
-      .then((data) => setUsers(data))
-      .catch((error) => console.error("Erro ao buscar usuários", error));
+
+    async function fetchData() {
+
+      try {
+        const response = await fetch(`http://localhost:3000/users`, {
+            method: "GET",
+            headers: {
+                "Content-Type": "application/json",
+            }
+        })
+        const data = await response.json();
+  
+        if (response.ok && data.name && data.email) {
+          setUsers(data);
+        } else {
+            console.error("Erro ao buscar usuários", data);
+        }
+    } catch (error) {
+        console.error("Erro na requisição", error);
+    }
+    }
+    fetchData()
   }, []);
 
   return (

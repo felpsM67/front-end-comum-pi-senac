@@ -1,6 +1,7 @@
 import { BrowserRouter as Router, Routes, Route } from "react-router-dom";
-import { Home, UserManagement } from "./home"; // Importa os componentes
-import Login from "./login"; // Importa a tela de login
+import Login from "./login";
+import { Home, UserManagement } from "./home";
+import { UserForm } from "./user-form";
 
 function App() {
   return (
@@ -9,8 +10,8 @@ function App() {
         <Route path="/" element={<Login />} />
         <Route path="/home" element={<Home />} />
         <Route path="/users" element={<UserManagement />} />
-        <Route path="/users/new" element={<div>Cadastro de Usuário</div>} /> 
-        <Route path="/users/edit/:id" element={<div>Editar Usuário</div>} />
+        <Route path="/users/new" element={<UserForm />} />
+        <Route path="/users/edit/:id" element={<UserForm isEditing />} />
       </Routes>
     </Router>
   );
