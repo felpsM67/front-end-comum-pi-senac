@@ -28,15 +28,17 @@ export function UserManagement() {
     async function fetchData() {
 
       try {
-        const response = await fetch(`http://localhost:3000/users`, {
+        const response = await fetch(`http://localhost:3000/api/users`, {
             method: "GET",
             headers: {
                 "Content-Type": "application/json",
+                "Authorization": `Bearer ${localStorage.getItem("token")}`,
             }
         })
         const data = await response.json();
+        console.log('usuarios', data)
   
-        if (response.ok && data.name && data.email) {
+        if (response.ok && Array.isArray(data)) {
           setUsers(data);
         } else {
             console.error("Erro ao buscar usuários", data);

@@ -1,7 +1,7 @@
 import { BrowserRouter as Router, Routes, Route } from "react-router-dom";
-import Login from "./login";
-import { Home, UserManagement } from "./home";
-import { UserForm } from "./user-form";
+import Login from "./Login";
+import { Home, UserManagement } from "./Home";
+import { UserForm } from "./UserForm";
 
 function App() {
   return (

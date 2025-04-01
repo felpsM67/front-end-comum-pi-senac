@@ -14,7 +14,7 @@ export function UserForm({ isEditing = false }) {
 
             if (isEditing) {
                 try {
-                    const response = await fetch(`http://localhost:3000/users/${id}`, {
+                    const response = await fetch(`http://localhost:3000/api/users/${id}`, {
                         method: "GET",
                         headers: {
                             "Content-Type": "application/json",
@@ -38,7 +38,7 @@ export function UserForm({ isEditing = false }) {
 
     const handleSubmit = async (e) => {
         e.preventDefault();
-        const url = isEditing ? `http://localhost:3000/users/${id}` : "http://localhost:3000/users";
+        const url = isEditing ? `http://localhost:3000/api/users/${id}` : "http://localhost:3000/api/users";
         const method = isEditing ? "PUT" : "POST";
 
         const response = await fetch(url, {

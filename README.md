@@ -42,8 +42,9 @@ module.exports = {
 7. Em seguida altere o arquivo **App.js** e insira o seguinte código:
 ```javascript
 import { BrowserRouter as Router, Routes, Route } from "react-router-dom";
-import { Home, UserManagement } from "./HomeUserManagement"; // Importa os componentes
-import Login from "./Login"; // Importa a tela de login
+import Login from "./Login";
+import { Home, UserManagement } from "./Home";
+import { UserForm } from "./UserForm";
 
 function App() {
   return (
@@ -52,8 +53,8 @@ function App() {
         <Route path="/" element={<Login />} />
         <Route path="/home" element={<Home />} />
         <Route path="/users" element={<UserManagement />} />
-        <Route path="/users/new" element={<div>Cadastro de Usuário</div>} /> 
-        <Route path="/users/edit/:id" element={<div>Editar Usuário</div>} />
+        <Route path="/users/new" element={<UserForm />} /> 
+        <Route path="/users/edit/:id" element={<UserForm isEditing />} />
       </Routes>
     </Router>
   );
@@ -63,7 +64,7 @@ export default App;
 
 ```
 
-8. Crie o arquivo **login.js** na pasta components e insira o seguinte código:
+8. Crie o arquivo **Login.js** na pasta components e insira o seguinte código:
 ```javascript
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
@@ -80,7 +81,7 @@ export default function Login() {
         headers: {
           "Content-Type": "application/json",
         },
-        body: JSON.stringify({ username, password }),
+        body: JSON.stringify({ email: username, senha: password }),
       });
 
       const data = await response.json();
@@ -125,7 +126,7 @@ export default function Login() {
   );
 }
 ```
-9. Crie o arquivo **home.js** na pasta components e insira o seguinte código:
+9. Crie o arquivo **Home.js** na pasta components e insira o seguinte código:
 ```javascript
 import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
@@ -154,15 +155,16 @@ export function UserManagement() {
 
   useEffect(async () => {
     try {
-      const response = await fetch(`http://localhost:3000/users`, {
+      const response = await fetch(`http://localhost:3000/api/users`, {
           method: "GET",
           headers: {
               "Content-Type": "application/json",
+              "Authorization": `Bearer ${localStorage.getItem("token")}`,
           }
       })
       const data = await response.json();
 
-      if (response.ok && data.name && data.email) {
+      if (response.ok && Array.isArray(data)) {
         setUsers(data);
       } else {
           console.error("Erro ao buscar usuários", data);
@@ -196,7 +198,7 @@ export function UserManagement() {
           {users.map((user) => (
             <tr key={user.id} className="text-center">
               <td className="border border-gray-300 p-2">{user.id}</td>
-              <td className="border border-gray-300 p-2">{user.name}</td>
+              <td className="border border-gray-300 p-2">{user.nome}</td>
               <td className="border border-gray-300 p-2">{user.email}</td>
               <td className="border border-gray-300 p-2">
                 <button
@@ -220,7 +222,7 @@ export function UserManagement() {
   );
 }
 ```
-10. Crie o arquivo **user-form.js** na pasta components e insira o seguinte código:
+10. Crie o arquivo **UserForm.js** na pasta components e insira o seguinte código:
 ```javascript
 import { useEffect, useState } from "react";
 import { useNavigate, useParams } from "react-router-dom";
@@ -239,12 +241,13 @@ export function UserForm({ isEditing = false }) {
                     method: "GET",
                     headers: {
                         "Content-Type": "application/json",
+                        "Authorization": `Bearer ${localStorage.getItem("token")}`,
                     }
                 })
                 const data = await response.json();
 
-                if (response.ok && data.name && data.email) {
-                    setName(data.name);
+                if (response.ok && data.nome && data.email) {
+                    setName(data.nome);
                     setEmail(data.email);
                 } else {
                     console.error("Erro ao buscar usuários", data);
@@ -257,7 +260,7 @@ export function UserForm({ isEditing = false }) {
 
     const handleSubmit = async (e) => {
         e.preventDefault();
-        const url = isEditing ? `http://localhost:3000/users/${id}` : "http://localhost:3000/users";
+        const url = isEditing ? `http://localhost:3000/api/users/${id}` : "http://localhost:3000/api/users";
         const method = isEditing ? "PUT" : "POST";
 
         const response = await fetch(url, {
@@ -315,7 +318,7 @@ export function UserForm({ isEditing = false }) {
 }
 ```
 
-10. Altere o arquivo **home.js** na pasta components e insira o seguinte código:
+10. Altere o arquivo **Home.js** na pasta components e insira o seguinte código:
 ```javascript
 import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
@@ -344,7 +347,7 @@ export function UserManagement() {
 
   useEffect(async () => {
     try {
-      const response = await fetch(`http://localhost:3000/users`, {
+      const response = await fetch(`http://localhost:3000/api/users`, {
           method: "GET",
           headers: {
               "Content-Type": "application/json",
@@ -352,7 +355,7 @@ export function UserManagement() {
       })
       const data = await response.json();
 
-      if (response.ok && data.name && data.email) {
+      if (response.ok && Array.isArray(data)) {
         setUsers(data);
       } else {
           console.error("Erro ao buscar usuários", data);
@@ -386,7 +389,7 @@ export function UserManagement() {
           {users.map((user) => (
             <tr key={user.id} className="text-center">
               <td className="border border-gray-300 p-2">{user.id}</td>
-              <td className="border border-gray-300 p-2">{user.name}</td>
+              <td className="border border-gray-300 p-2">{user.nome}</td>
               <td className="border border-gray-300 p-2">{user.email}</td>
               <td className="border border-gray-300 p-2">
                 <button
