@@ -74,7 +74,7 @@ export function UserManagement() {
           {users.map((user) => (
             <tr key={user.id} className="text-center">
               <td className="border border-gray-300 p-2">{user.id}</td>
-              <td className="border border-gray-300 p-2">{user.name}</td>
+              <td className="border border-gray-300 p-2">{user.nome}</td>
               <td className="border border-gray-300 p-2">{user.email}</td>
               <td className="border border-gray-300 p-2">
                 <button

@@ -399,7 +399,7 @@ export function UserManagement() {
                   Editar
                 </button>
                 <button
-                  onClick={() => console.log("Deletar usuário", user.id)}
+                  onClick={() => navigate(`/users/delete/${user.id}`)}
                   className="bg-red-500 text-white p-1 rounded hover:bg-red-600"
                 >
                   Deletar

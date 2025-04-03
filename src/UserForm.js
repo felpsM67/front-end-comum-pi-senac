@@ -18,12 +18,13 @@ export function UserForm({ isEditing = false }) {
                         method: "GET",
                         headers: {
                             "Content-Type": "application/json",
+                            "Authorization": `Bearer ${localStorage.getItem("token")}`,
                         }
                     })
                     const data = await response.json();
     
-                    if (response.ok && data.name && data.email) {
-                        setName(data.name);
+                    if (response.ok && data.nome && data.email) {
+                        setName(data.nome);
                         setEmail(data.email);
                     } else {
                         console.error("Erro ao buscar usuários", data);
@@ -43,7 +44,9 @@ export function UserForm({ isEditing = false }) {
 
         const response = await fetch(url, {
             method,
-            headers: { "Content-Type": "application/json" },
+            headers: { "Content-Type": "application/json",
+                "Authorization": `Bearer ${localStorage.getItem("token")}`
+            },
             body: JSON.stringify({ name, email, password }),
         });
 
