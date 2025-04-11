@@ -1,5 +1,5 @@
-import { useEffect, useState } from "react";
-import { useNavigate } from "react-router-dom";
+import React, { useEffect, useState } from 'react';
+import { useNavigate } from 'react-router-dom';
 
 export function Home() {
   const navigate = useNavigate();
@@ -9,7 +9,8 @@ export function Home() {
       <div className="bg-white p-6 rounded-lg shadow-lg w-full max-w-sm">
         <h2 className="text-2xl font-bold mb-4 text-center">Home</h2>
         <button
-          onClick={() => navigate("/users")}
+          type="button"
+          onClick={() => navigate('/users')}
           className="w-full bg-blue-500 text-white p-3 rounded hover:bg-blue-600 transition-all duration-300"
         >
           Usuários
@@ -24,30 +25,28 @@ export function UserManagement() {
   const navigate = useNavigate();
 
   useEffect(() => {
-
     async function fetchData() {
-
       try {
         const response = await fetch(`http://localhost:3000/api/users`, {
-            method: "GET",
-            headers: {
-                "Content-Type": "application/json",
-                "Authorization": `Bearer ${localStorage.getItem("token")}`,
-            }
-        })
+          method: 'GET',
+          headers: {
+            'Content-Type': 'application/json',
+            Authorization: `Bearer ${localStorage.getItem('token')}`,
+          },
+        });
         const data = await response.json();
-        console.log('usuarios', data)
-  
+        console.log('usuarios', data);
+
         if (response.ok && Array.isArray(data)) {
           setUsers(data);
         } else {
-            console.error("Erro ao buscar usuários", data);
+          console.error('Erro ao buscar usuários', data);
         }
-    } catch (error) {
-        console.error("Erro na requisição", error);
+      } catch (error) {
+        console.error('Erro na requisição', error);
+      }
     }
-    }
-    fetchData()
+    fetchData();
   }, []);
 
   return (
@@ -55,7 +54,8 @@ export function UserManagement() {
       <div className="flex justify-between items-center mb-4">
         <h2 className="text-2xl font-bold">Gestão de Usuários</h2>
         <button
-          onClick={() => navigate("/users/new")}
+          type="button"
+          onClick={() => navigate('/users/new')}
           className="bg-green-500 text-white p-2 rounded flex items-center hover:bg-green-600"
         >
           <span className="mr-2">+</span> Novo
@@ -78,13 +78,15 @@ export function UserManagement() {
               <td className="border border-gray-300 p-2">{user.email}</td>
               <td className="border border-gray-300 p-2">
                 <button
+                  type="button"
                   onClick={() => navigate(`/users/edit/${user.id}`)}
                   className="bg-yellow-500 text-white p-1 rounded mr-2 hover:bg-yellow-600"
                 >
                   Editar
                 </button>
                 <button
-                  onClick={() => console.log("Deletar usuário", user.id)}
+                  type="button"
+                  onClick={() => console.log('Deletar usuário', user.id)}
                   className="bg-red-500 text-white p-1 rounded hover:bg-red-600"
                 >
                   Deletar

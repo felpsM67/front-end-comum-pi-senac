@@ -437,3 +437,135 @@ function App() {
 export default App;
 
 ```
+## Habilitar eslint e prettier em um projeto criado com create-react-app
+
+1. Execute o seguinte comando:
+```bash
+npx install-peerdeps --dev eslint-config-airbnb
+npm install --save-dev prettier eslint-config-prettier eslint-plugin-prettier
+```
+
+2. Crie o arquivo **.eslintrc.json** e insira o seguinte código:
+```json
+{
+  "extends": [
+    "react-app",
+    "airbnb",
+    "plugin:prettier/recommended"
+  ],
+  "rules": {
+    "react/jsx-filename-extension": [
+      1,
+      { "extensions": [".js", ".jsx"] }
+    ],
+    "prettier/prettier": [
+      "error",
+      {
+        "endOfLine": "auto"
+      }
+    ]
+  }
+}
+```
+3. Crie o arquivo **.prettierrc.json** e insira o seguinte código:
+```json
+{
+  "singleQuote": true,
+  "trailingComma": "all",
+  "printWidth": 80,
+  "tabWidth": 2,
+  "semi": true
+}
+```
+
+4. Adicione os seguintes scripts no seu arquivo **package.json**:
+```json
+{
+  ...
+  "scripts": {
+    "lint": "eslint 'src/**/*.{js,jsx}'",
+    "format": "prettier --write 'src/**/*.{js,jsx,json,css,scss,md}'"
+  }
+  ...
+}
+```
+
+5. Para executar o ESLint e o Prettier:
+```bash
+npm run lint
+```
+6. Para formatar o código com Prettier, execute:
+```bash
+npm run format
+```
+
+7. **Crie uma pasta .vscode na raiz do projeto e nessa pasta crie os seguites arquivos:
+ - extensions.json
+ - launch.json
+ - settings.json
+ - tasks.json
+
+8. **Habilite o ESLint e o Prettier no VS Code**:
+   Certifique-se de que as extensões do ESLint e Prettier estão instaladas no VS Code. Adicione as seguintes configurações no arquivo `settings.json` do VS Code:
+   
+```json
+{
+  "editor.formatOnSave": true,
+  "editor.defaultFormatter": "esbenp.prettier-vscode",
+  "eslint.validate": ["javascript", "javascriptreact", "typescript", "typescriptreact"]
+}
+```
+9. Abra o arquivo `launch.json` e insira o seguinte código:
+```json
+{
+  "version": "0.2.0",
+  "configurations": [
+    {
+      "type": "chrome",
+      "request": "launch",
+      "name": "Launch Chrome against localhost",
+      "url": "http://localhost:3000",
+      "webRoot": "${workspaceFolder}/src"
+    }
+  ]
+}
+```
+
+10. Abra o arquivo `tasks.json` e insira o seguinte código:
+```json
+{
+  "version": "2.0.0",
+  "tasks": [
+    {
+      "label": "Run ESLint",
+      "type": "shell",
+      "command": "npm run lint",
+      "group": {
+        "kind": "build",
+        "isDefault": true
+      }
+    },
+    {
+      "label": "Run Prettier",
+      "type": "shell",
+      "command": "npm run format",
+      "group": {
+        "kind": "build",
+        "isDefault": false
+      }
+    }
+  ]
+}
+```
+
+11. Abra o arquivo `extensions.json` e insira o seguinte código:
+```json
+{
+  "recommendations": [
+    "dbaeumer.vscode-eslint",
+    "esbenp.prettier-vscode",
+    "formulahendry.auto-rename-tag",
+    "formulahendry.auto-close-tag"
+  ]
+}
+```

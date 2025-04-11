@@ -1,31 +1,31 @@
-import { useState } from "react";
-import { useNavigate } from "react-router-dom";
+import React, { useState } from 'react';
+import { useNavigate } from 'react-router-dom';
 
 export default function Login() {
-  const [username, setUsername] = useState("");
-  const [password, setPassword] = useState("");
+  const [username, setUsername] = useState('');
+  const [password, setPassword] = useState('');
   const navigate = useNavigate();
 
   const login = async () => {
     try {
-      const response = await fetch("http://localhost:3000/api/login", {
-        method: "POST",
+      const response = await fetch('http://localhost:3000/api/login', {
+        method: 'POST',
         headers: {
-          "Content-Type": "application/json",
+          'Content-Type': 'application/json',
         },
         body: JSON.stringify({ email: username, senha: password }),
       });
 
       const data = await response.json();
-      
+
       if (response.ok && data.token) {
-        localStorage.setItem("token", data.token);
-        navigate("/home");
+        localStorage.setItem('token', data.token);
+        navigate('/home');
       } else {
-        console.error("Erro no login", data);
+        console.error('Erro no login', data);
       }
     } catch (error) {
-      console.error("Erro na requisição", error);
+      console.error('Erro na requisição', error);
     }
   };
 
@@ -48,6 +48,7 @@ export default function Login() {
           className="w-full p-3 mb-4 border rounded focus:outline-none focus:ring-2 focus:ring-blue-500"
         />
         <button
+          type="button"
           onClick={login}
           className="w-full bg-blue-500 text-white p-3 rounded hover:bg-blue-600 transition-all duration-300"
         >

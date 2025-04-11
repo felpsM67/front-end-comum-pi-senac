@@ -1,7 +1,8 @@
-import { BrowserRouter as Router, Routes, Route } from "react-router-dom";
-import Login from "./Login";
-import { Home, UserManagement } from "./Home";
-import { UserForm } from "./UserForm";
+import React from 'react';
+import { BrowserRouter as Router, Routes, Route } from 'react-router-dom';
+import Login from './Login';
+import { Home, UserManagement } from './Home';
+import UserForm from './UserForm';
 
 function App() {
   return (
