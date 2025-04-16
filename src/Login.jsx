@@ -1,31 +1,37 @@
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
+import api from './http/api';
+import Snackbar from './components/Snackbar';
 
 export default function Login() {
   const [username, setUsername] = useState('');
   const [password, setPassword] = useState('');
+  const [snackbar, setSnackbar] = useState({ message: '', type: '' });
   const navigate = useNavigate();
 
   const login = async () => {
     try {
-      const response = await fetch('http://localhost:3000/api/login', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({ email: username, senha: password }),
+      const response = await api.post('/login', {
+        email: username,
+        senha: password,
       });
+      const { data, status } = response;
 
-      const data = await response.json();
-
-      if (response.ok && data.token) {
+      if (status > 199 && status <= 299 && data.token) {
         localStorage.setItem('token', data.token);
+        localStorage.setItem('refreshToken', data.refreshToken);
         navigate('/home');
       } else {
-        console.error('Erro no login', data);
+        setSnackbar({
+          message: 'Erro no login. Verifique suas credenciais.',
+          type: 'error',
+        });
       }
     } catch (error) {
-      console.error('Erro na requisição', error);
+      setSnackbar({
+        message: 'Erro na requisição. Tente novamente mais tarde.',
+        type: 'error',
+      });
     }
   };
 
@@ -55,6 +61,11 @@ export default function Login() {
           Logar
         </button>
       </div>
+      <Snackbar
+        message={snackbar.message}
+        type={snackbar.type}
+        onClose={() => setSnackbar({ message: '', type: '' })}
+      />
     </div>
   );
 }
