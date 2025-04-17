@@ -25,6 +25,7 @@ export default function Login() {
         setSnackbar({
           message: 'Erro no login. Verifique suas credenciais.',
           type: 'error',
+          duration: 10000,
         });
       }
     } catch (error) {

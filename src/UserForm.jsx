@@ -1,11 +1,14 @@
 import React, { useEffect, useState } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
+import api from './http/api';
+import Snackbar from './components/Snackbar';
 
 // eslint-disable-next-line react/prop-types
 export default function UserForm({ isEditing = false }) {
   const [name, setName] = useState('');
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
+  const [snackbar, setSnackbar] = useState({ message: '', type: '' });
   const navigate = useNavigate();
   const { id } = useParams();
 
@@ -13,26 +16,24 @@ export default function UserForm({ isEditing = false }) {
     async function fetchData() {
       if (isEditing) {
         try {
-          const response = await fetch(
-            `http://localhost:3000/api/users/${id}`,
-            {
-              method: 'GET',
-              headers: {
-                'Content-Type': 'application/json',
-                Authorization: `Bearer ${localStorage.getItem('token')}`,
-              },
-            },
-          );
-          const data = await response.json();
-
-          if (response.ok && data.nome && data.email) {
+          const response = await api.get(`/users/${id}`);
+          const { data } = response;
+          if (response.status > 199 && response.status <= 299) {
             setName(data.nome);
             setEmail(data.email);
           } else {
-            console.error('Dados inválidos recebidos');
+            setSnackbar({
+              message: 'Erro ao buscar usuário',
+              type: 'error',
+              duration: 10000,
+            });
           }
         } catch (error) {
-          console.error('Erro na requisição', error);
+          setSnackbar({
+            message: 'Erro na requisição',
+            type: 'error',
+            duration: 10000,
+          });
         }
       }
     }
@@ -41,25 +42,43 @@ export default function UserForm({ isEditing = false }) {
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-    const url = isEditing
-      ? `http://localhost:3000/api/users/${id}`
-      : 'http://localhost:3000/api/users';
-    const method = isEditing ? 'PUT' : 'POST';
 
-    const response = await fetch(url, {
-      method,
-      headers: {
-        'Content-Type': 'application/json',
-        Authorization: `Bearer ${localStorage.getItem('token')}`,
-      },
-      body: JSON.stringify({ name, email, password }),
-    });
+    try {
+      const url = isEditing ? `/users/${id}` : '/users';
 
-    if (response.ok) {
-      navigate('/users');
-    } else {
-      console.error('Erro ao salvar usuário');
+      let response;
+
+      if (isEditing) {
+        response = await api.put(url, {
+          nome: name,
+          email,
+          senha: password,
+        });
+      } else {
+        response = await api.post(url, {
+          nome: name,
+          email,
+          senha: password,
+        });
+      }
+      if (response.status > 199 && response.status <= 299) {
+        setSnackbar({
+          message: isEditing
+            ? 'Usuário atualizado com sucesso'
+            : 'Usuário criado com sucesso',
+          type: 'success',
+          duration: 10000,
+        });
+        navigate('/users');
+      }
+    } catch (error) {
+      setSnackbar({
+        message: 'Erro na requisição',
+        type: 'error',
+        duration: 10000,
+      });
     }
+    navigate('/users');
   };
 
   return (
@@ -101,6 +120,11 @@ export default function UserForm({ isEditing = false }) {
           </button>
         </form>
       </div>
+      <Snackbar
+        message={snackbar.message}
+        type={snackbar.type}
+        onClose={() => setSnackbar({ message: '', type: '' })}
+      />
     </div>
   );
 }
