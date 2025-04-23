@@ -6,32 +6,38 @@ import Snackbar from './components/Snackbar';
 export default function Login() {
   const [username, setUsername] = useState('');
   const [password, setPassword] = useState('');
-  const [snackbar, setSnackbar] = useState({ message: '', type: '' });
+  const [snackbar, setSnackbar] = useState({
+    message: '',
+    type: '',
+    duration: 0,
+  });
   const navigate = useNavigate();
 
   const login = async () => {
+    const duration = 10000;
     try {
       const response = await api.post('/login', {
         email: username,
         senha: password,
       });
-      const { data, status } = response;
+      const { data, message } = response;
 
-      if (status > 199 && status <= 299 && data.token) {
-        localStorage.setItem('token', data.token);
-        localStorage.setItem('refreshToken', data.refreshToken);
-        navigate('/home');
-      } else {
-        setSnackbar({
-          message: 'Erro no login. Verifique suas credenciais.',
-          type: 'error',
-          duration: 10000,
-        });
-      }
-    } catch (error) {
+      localStorage.setItem('token', data.token);
+      localStorage.setItem('refreshToken', data.refreshToken);
       setSnackbar({
-        message: 'Erro na requisição. Tente novamente mais tarde.',
+        message: message || 'Sucesso ao logar.',
+        type: 'success',
+        duration,
+      });
+      setTimeout(() => {
+        navigate('/home');
+      }, duration);
+    } catch (error) {
+      const { message } = JSON.parse(error.message);
+      setSnackbar({
+        message: message || 'Erro de conexão.',
         type: 'error',
+        duration,
       });
     }
   };

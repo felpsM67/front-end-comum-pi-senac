@@ -1,14 +1,18 @@
 import React, { useEffect, useState } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
+import PropTypes from 'prop-types';
 import api from './http/api';
 import Snackbar from './components/Snackbar';
 
-// eslint-disable-next-line react/prop-types
 export default function UserForm({ isEditing = false }) {
   const [name, setName] = useState('');
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
-  const [snackbar, setSnackbar] = useState({ message: '', type: '' });
+  const [snackbar, setSnackbar] = useState({
+    message: '',
+    type: '',
+    duration: 0,
+  });
   const navigate = useNavigate();
   const { id } = useParams();
 
@@ -18,16 +22,8 @@ export default function UserForm({ isEditing = false }) {
         try {
           const response = await api.get(`/users/${id}`);
           const { data } = response;
-          if (response.status > 199 && response.status <= 299) {
-            setName(data.nome);
-            setEmail(data.email);
-          } else {
-            setSnackbar({
-              message: 'Erro ao buscar usuário',
-              type: 'error',
-              duration: 10000,
-            });
-          }
+          setName(data.nome);
+          setEmail(data.email);
         } catch (error) {
           setSnackbar({
             message: 'Erro na requisição',
@@ -45,22 +41,28 @@ export default function UserForm({ isEditing = false }) {
 
     try {
       const url = isEditing ? `/users/${id}` : '/users';
+      const method = isEditing ? 'put' : 'post';
+      const response = await api[method](url, {
+        nome: name,
+        email,
+        senha: password,
+      });
 
-      let response;
+      // let response;
 
-      if (isEditing) {
-        response = await api.put(url, {
-          nome: name,
-          email,
-          senha: password,
-        });
-      } else {
-        response = await api.post(url, {
-          nome: name,
-          email,
-          senha: password,
-        });
-      }
+      // if (isEditing) {
+      //   response = await api.put(url, {
+      //     nome: name,
+      //     email,
+      //     senha: password,
+      //   });
+      // } else {
+      //   response = await api.post(url, {
+      //     nome: name,
+      //     email,
+      //     senha: password,
+      //   });
+      // }
       if (response.status > 199 && response.status <= 299) {
         setSnackbar({
           message: isEditing
@@ -128,3 +130,10 @@ export default function UserForm({ isEditing = false }) {
     </div>
   );
 }
+
+UserForm.propTypes = {
+  isEditing: PropTypes.bool,
+};
+UserForm.defaultProps = {
+  isEditing: false,
+};

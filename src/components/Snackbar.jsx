@@ -1,8 +1,12 @@
-/* eslint-disable react/prop-types */
 import React, { useState, useEffect } from 'react';
 import PropTypes from 'prop-types';
 
-function Snackbar({ message, type = 'success', duration = 3000, onClose }) {
+export default function Snackbar({
+  message,
+  type = 'success', // Valor padrão definido aqui
+  duration = 10000, // Valor padrão definido aqui
+  onClose = null, // Valor padrão definido aqui
+}) {
   const [visible, setVisible] = useState(false);
 
   useEffect(() => {
@@ -17,7 +21,6 @@ function Snackbar({ message, type = 'success', duration = 3000, onClose }) {
 
       return () => clearTimeout(timer);
     }
-
     return undefined;
   }, [message, duration, onClose]);
 
@@ -32,7 +35,7 @@ function Snackbar({ message, type = 'success', duration = 3000, onClose }) {
 
   return (
     <div
-      className={`fixed top-4 right-1 transform -translate-x-1/2 px-4 py-2 rounded shadow-lg ${typeStyles[type]} transition-opacity duration-300`}
+      className={`fixed bottom-4 left-1/2 transform -translate-x-1/2 px-4 py-2 rounded shadow-lg ${typeStyles[type]} transition-opacity duration-300`}
     >
       {message}
     </div>
@@ -45,9 +48,9 @@ Snackbar.propTypes = {
   duration: PropTypes.number,
   onClose: PropTypes.func,
 };
+
 Snackbar.defaultProps = {
   type: 'success',
-  duration: 3000,
+  duration: 10000,
   onClose: null,
 };
-export default Snackbar;
