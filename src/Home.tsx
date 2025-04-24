@@ -20,8 +20,15 @@ export function Home() {
   );
 }
 
+interface User {
+  id: number;
+  nome: string;
+  email: string;
+  senha: string;
+}
+
 export function UserManagement() {
-  const [users, setUsers] = useState([]);
+  const [users, setUsers] = useState<Array<User> | []>([]);
   const navigate = useNavigate();
 
   useEffect(() => {
@@ -71,7 +78,7 @@ export function UserManagement() {
           </tr>
         </thead>
         <tbody>
-          {users.map((user) => (
+          {users.map((user: User) => (
             <tr key={user.id} className="text-center">
               <td className="border border-gray-300 p-2">{user.id}</td>
               <td className="border border-gray-300 p-2">{user.nome}</td>
