@@ -43,9 +43,13 @@ export default function Login() {
       setTimeout(() => {
         navigate('/home');
       }, duration);
-    } catch (error: any) {
+    } catch (error: unknown) {
+      const axiosError = error as {
+        response?: { data?: { message?: string } };
+      };
       setSnackbar({
-        message: error.response?.data?.message || 'Erro ao realizar login.',
+        message:
+          axiosError.response?.data?.message || 'Erro ao realizar login.',
         type: 'error',
         duration: 10000,
       });
