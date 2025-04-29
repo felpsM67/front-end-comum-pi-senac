@@ -3,10 +3,7 @@
   "version": "0.1.0",
   "private": true,
   "dependencies": {
-    "@testing-library/dom": "^10.4.0",
-    "@testing-library/jest-dom": "^6.6.3",
-    "@testing-library/react": "^16.2.0",
-    "@testing-library/user-event": "^13.5.0",
+    "@types/node": "^16.18.126",
     "@types/react": "^19.1.2",
     "@types/react-dom": "^19.1.2",
     "axios": "^1.8.4",
@@ -46,7 +43,9 @@
     ]
   },
   "devDependencies": {
-    "eslint": "^8.2.0",
+    "@typescript-eslint/eslint-plugin": "^8.31.1",
+    "@typescript-eslint/parser": "^8.31.1",
+    "eslint": "^8.57.1",
     "eslint-config-airbnb": "19.0.4",
     "eslint-config-prettier": "^10.1.2",
     "eslint-plugin-import": "^2.25.3",
