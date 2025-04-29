@@ -1,7 +1,18 @@
-import axios from 'axios';
+import axios, {
+  AxiosInstance,
+  AxiosRequestConfig,
+  AxiosResponse,
+  InternalAxiosRequestConfig,
+} from 'axios';
+
+// Define a interface para a resposta de erro
+interface ApiError {
+  status: number;
+  message: string;
+}
 
 // Cria uma instância do axios
-const api = axios.create({
+const api: AxiosInstance = axios.create({
   baseURL: process.env.REACT_APP_API_BASE_URL, // Substitua pela URL base da sua API
   headers: {
     'Content-Type': 'application/json',
@@ -10,13 +21,11 @@ const api = axios.create({
 
 // Interceptador de requisição
 api.interceptors.request.use(
-  (config) => {
+  (config: InternalAxiosRequestConfig) => {
     // Adiciona o token Bearer ao header Authorization
     const token = localStorage.getItem('token'); // Substitua pela lógica de onde o token está armazenado
     if (token) {
-      const updatedConfig = { ...config };
-      updatedConfig.headers.Authorization = `Bearer ${token}`;
-      return updatedConfig;
+      config.headers.set('Authorization', `Bearer ${token}`);
     }
     return config;
   },
@@ -28,13 +37,9 @@ api.interceptors.request.use(
 
 // Interceptador de resposta
 api.interceptors.response.use(
-  (response) => {
-    // Retorna o status code e a mensagem para respostas bem-sucedidas
-    return {
-      status: response.status,
-      message: response.data?.message || 'Success',
-      data: response.data,
-    };
+  (response: AxiosResponse) => {
+    // Retorna a resposta original para manter a tipagem correta
+    return response;
   },
   async (error) => {
     const originalRequest = error.config;
@@ -46,9 +51,12 @@ api.interceptors.response.use(
       if (status === 401 && originalRequest.headers.Authorization) {
         try {
           // Redireciona para o endpoint de refresh-token
-          const refreshResponse = await api.post('/refresh-token', {
-            token: localStorage.getItem('refreshToken'), // Substitua pela lógica do refresh token
-          });
+          const refreshResponse = await api.post<{ token: string }>(
+            '/refresh-token',
+            {
+              token: localStorage.getItem('refreshToken'), // Substitua pela lógica do refresh token
+            },
+          );
 
           // Atualiza o token e refaz a requisição original
           const newToken = refreshResponse.data.token;
@@ -67,7 +75,7 @@ api.interceptors.response.use(
         alert('Você não possui acesso a esta tela.');
         window.history.back(); // Redireciona para a última tela visitada
         const errorAcessoNegado = new Error('Acesso negado.');
-        errorAcessoNegado.status = status;
+        (errorAcessoNegado as unknown as ApiError).status = status;
         return Promise.reject(errorAcessoNegado);
       }
 
