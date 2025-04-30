@@ -13,7 +13,6 @@ export default function Select({
   return (
     <div className={`w-full ${className}`}>
       {label && (
-        // eslint-disable-next-line jsx-a11y/label-has-associated-control
         <label className="block text-sm font-medium text-gray-700 mb-1">
           {label}
         </label>
