@@ -968,3 +968,78 @@ Snackbar.defaultProps = {
 };
 export default Snackbar;
 ```
+
+## Adicionar Typescript ao projeto:
+
+1. Execute o seguinte comando para instalar as bibliotecas necessárias:
+
+```bash
+npm install --save-dev @typescript-eslint/eslint-plugin @typescript-eslint/parser @types/axios @types/node @types/react @types/react-dom
+npm install typescript
+```
+
+2. Edite o arquivo **.eslintrc.json** para o seguinte código:
+
+```json
+{
+  "env": {
+    "browser": true,
+    "es2021": true
+  },
+  "extends": [
+    "eslint:recommended",
+    "plugin:react/recommended",
+    "plugin:@typescript-eslint/recommended"
+  ],
+  "parser": "@typescript-eslint/parser",
+  "parserOptions": {
+    "ecmaVersion": 12,
+    "sourceType": "module",
+    "ecmaFeatures": {
+      "jsx": true
+    }
+  },
+  "plugins": ["react", "@typescript-eslint"],
+  "settings": {
+    "react": {
+      "version": "detect"
+    }
+  },
+  "rules": {
+    // Adicione ou ajuste regras conforme necessário
+    "react/prop-types": "off", // Desative se estiver usando TypeScript para tipagem de props
+    "@typescript-eslint/no-unused-vars": ["error"]
+  }
+}
+```
+
+3. Crie o arquivo **react-app--env.d.ts** na raiz do projeto e insira o seguinte código:
+
+```typescript
+/// <reference types="react-scripts" />
+```
+
+4. Crie o arquivo **tsconfig.json** e adicione o seguinte código:
+
+```json
+{
+  "compilerOptions": {
+    "target": "es5",
+    "lib": ["dom", "dom.iterable", "esnext"],
+    "allowJs": true,
+    "skipLibCheck": true,
+    "esModuleInterop": true,
+    "allowSyntheticDefaultImports": true,
+    "strict": true,
+    "forceConsistentCasingInFileNames": true,
+    "noFallthroughCasesInSwitch": true,
+    "module": "esnext",
+    "moduleResolution": "node",
+    "resolveJsonModule": true,
+    "isolatedModules": true,
+    "noEmit": true,
+    "jsx": "react"
+  },
+  "include": ["src"]
+}
+```
