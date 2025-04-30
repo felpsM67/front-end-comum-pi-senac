@@ -1,5 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
+import api from '../http/api';
+import Snackbar from '../components/Snackbar';
 
 interface User {
   id: number;
@@ -8,30 +10,52 @@ interface User {
   senha: string;
 }
 
+interface SnackbarPropsState {
+  message: string;
+  type: 'success' | 'error' | 'warning' | 'info';
+  duration: number;
+}
+
 export default function UserManagement() {
   const [users, setUsers] = useState<Array<User> | []>([]);
+  const [snackbar, setSnackbar] = useState<SnackbarPropsState>({
+    message: '',
+    type: 'success',
+    duration: 0,
+  });
   const navigate = useNavigate();
 
   useEffect(() => {
     async function fetchData() {
       try {
-        const response = await fetch(`http://localhost:3000/api/users`, {
-          method: 'GET',
-          headers: {
-            'Content-Type': 'application/json',
-            Authorization: `Bearer ${localStorage.getItem('token')}`,
-          },
-        });
-        const data = await response.json();
+        // const response = await fetch(`http://localhost:3000/api/users`, {
+        //   method: 'GET',
+        //   headers: {
+        //     'Content-Type': 'application/json',
+        //     Authorization: `Bearer ${localStorage.getItem('token')}`,
+        //   },
+        // });
+        // const data = await response.json();
+        const response = await api['get']('users');
+        const { data } = response;
         console.log('usuarios', data);
 
-        if (response.ok && Array.isArray(data)) {
-          setUsers(data);
-        } else {
-          console.error('Erro ao buscar usuários', data);
-        }
-      } catch (error) {
-        console.error('Erro na requisição', error);
+        setUsers(data);
+
+        setSnackbar({
+          message: 'Lista de usuários carregada com sucesso',
+          type: 'success',
+          duration: 10000,
+        });
+      } catch (error: unknown) {
+        const axiosError = error as {
+          response?: { data?: { message?: string } };
+        };
+        setSnackbar({
+          message: axiosError.response?.data?.message || 'Erro na requisição.',
+          type: 'error',
+          duration: 10000,
+        });
       }
     }
     fetchData();
@@ -84,6 +108,11 @@ export default function UserManagement() {
           ))}
         </tbody>
       </table>
+      <Snackbar
+        message={snackbar.message}
+        duration={snackbar.duration}
+        type={snackbar.type}
+      />
     </div>
   );
 }
