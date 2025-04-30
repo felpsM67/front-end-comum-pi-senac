@@ -464,7 +464,7 @@ export default App;
 1. Execute o seguinte comando:
 
 ```bash
-npx install-peerdeps --dev eslint-config-airbnb
+npx install --save-dev eslint-config-airbnb --legacy-peer-deps
 npm install --save-dev prettier eslint-config-prettier eslint-plugin-prettier
 ```
 
@@ -725,105 +725,50 @@ export default api;
 1. Crie em **src** uma pasta chamada **components** e nessa pasta crie o arquivo **Snackbar.js** e insira o seguinte código:
 
 ```javascript
-import axios from 'axios';
+/* eslint-disable react/prop-types */
+import React, { useState, useEffect } from 'react';
 
-// Cria uma instância do axios
-const api = axios.create({
-  baseURL: process.env.REACT_APP_API_BASE_URL, // Substitua pela URL base da sua API
-  headers: {
-    'Content-Type': 'application/json',
-  },
-});
+export default function Snackbar({
+  message,
+  type = 'success',
+  duration = 3000,
+  onClose,
+}) {
+  const [visible, setVisible] = useState(false);
 
-// Interceptador de requisição
-api.interceptors.request.use(
-  (config) => {
-    // Adiciona o token Bearer ao header Authorization
-    const token = localStorage.getItem('token'); // Substitua pela lógica de onde o token está armazenado
-    if (token) {
-      const updatedConfig = { ...config };
-      updatedConfig.headers.Authorization = `Bearer ${token}`;
-      return updatedConfig;
-    }
-    return config;
-  },
-  (error) => {
-    // Lida com erros na configuração da requisição
-    return Promise.reject(error);
-  },
-);
+  useEffect(() => {
+    if (message) {
+      setVisible(true);
 
-// Interceptador de resposta
-api.interceptors.response.use(
-  (response) => {
-    // Retorna o status code e a mensagem para respostas bem-sucedidas
-    return {
-      status: response.status,
-      message: response.data?.message || 'Success',
-      data: response.data,
-    };
-  },
-  async (error) => {
-    const originalRequest = error.config;
+      // Oculta o snackbar após o tempo definido
+      const timer = setTimeout(() => {
+        setVisible(false);
+        if (onClose) onClose();
+      }, duration);
 
-    if (error.response) {
-      const { status } = error.response;
-
-      // Caso o status seja 401 e o token tenha sido enviado
-      if (status === 401 && originalRequest.headers.Authorization) {
-        try {
-          // Redireciona para o endpoint de refresh-token
-          const refreshResponse = await api.post('/refresh-token', {
-            token: localStorage.getItem('refreshToken'), // Substitua pela lógica do refresh token
-          });
-
-          // Atualiza o token e refaz a requisição original
-          const newToken = refreshResponse.data.token;
-          localStorage.setItem('token', newToken);
-          originalRequest.headers.Authorization = `Bearer ${newToken}`;
-          return api(originalRequest);
-        } catch (refreshError) {
-          // Caso o refresh falhe, redirecione para login
-          window.location.href = '/login';
-          return Promise.reject(refreshError);
-        }
-      }
-
-      // Caso o status seja 403
-      if (status === 403) {
-        alert('Você não possui acesso a esta tela.');
-        window.history.back(); // Redireciona para a última tela visitada
-        const errorAcessoNegado = new Error('Acesso negado.');
-        errorAcessoNegado.status = status;
-        return Promise.reject(errorAcessoNegado);
-      }
-
-      // Para outros erros acima de 399
-      if (status >= 400) {
-        return Promise.reject(
-          new Error(
-            JSON.stringify({
-              status,
-              message: error.response.data?.message || 'Erro desconhecido.',
-            }),
-          ),
-        );
-      }
+      return () => clearTimeout(timer);
     }
 
-    // Lida com erros sem resposta (ex.: problemas de rede)
-    return Promise.reject(
-      new Error(
-        JSON.stringify({
-          status: 0,
-          message: 'Erro de conexão.',
-        }),
-      ),
-    );
-  },
-);
+    return undefined;
+  }, [message, duration, onClose]);
 
-export default api;
+  if (!visible) return null;
+
+  const typeStyles = {
+    success: 'bg-green-500 text-white',
+    error: 'bg-red-500 text-white',
+    warning: 'bg-yellow-500 text-black',
+    info: 'bg-blue-500 text-white',
+  };
+
+  return (
+    <div
+      className={`fixed top-4 left-1/2 transform -translate-x-1/2 px-4 py-2 rounded shadow-lg ${typeStyles[type]} transition-opacity duration-300`}
+    >
+      {message}
+    </div>
+  );
+}
 ```
 
 2. Para testar o **Snackbar** e o **api.js** que agora usa o axios para nossas requisições HTTP faça as seguintes mudanças no **Login.js**:
