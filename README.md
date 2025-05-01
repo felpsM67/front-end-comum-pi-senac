@@ -988,3 +988,74 @@ npm install typescript
   "include": ["src"]
 }
 ```
+
+## Proteger Rotas do Front-End
+
+1. Crie um arquivo com o nome de **ProtectedRoute.tsx** e insira o seguinte código:
+
+```typescript
+import React from 'react';
+import { Navigate, Outlet } from 'react-router-dom';
+
+// Função para verificar se o token é válido
+const isAuthenticated = (): boolean => {
+  const token = localStorage.getItem('token');
+  if (!token) return false;
+
+  try {
+    const payload = JSON.parse(atob(token.split('.')[1])); // Decodifica o payload do JWT
+    const isExpired = payload.exp * 1000 < Date.now(); // Verifica se o token expirou
+    if (isExpired) {
+      localStorage.removeItem('token'); // Remove o token expirado
+      return false;
+    }
+    return true;
+  } catch (error) {
+    return false; // Token inválido
+  }
+};
+
+const ProtectedRoute: React.FC = () => {
+  return isAuthenticated() ? <Outlet /> : <Navigate to="/login" replace />;
+};
+
+export default ProtectedRoute;
+```
+
+2. Altere o arquivo **App.tsx** para o seguinte código:
+
+```typescript
+import React from 'react';
+import {
+  BrowserRouter as Router,
+  Routes,
+  Route,
+  Navigate,
+} from 'react-router-dom';
+import Login from './Login';
+import Home from './Home';
+import ProtectedRoute from '../ProtectedRoute';
+
+const App: React.FC = () => {
+  return (
+    <Router>
+      <Routes>
+        {/* Rota de login */}
+        <Route path="/login" element={<Login />} />
+
+        {/* Rotas protegidas */}
+        <Route element={<ProtectedRoute />}>
+          <Route path="/" element={<Navigate to="/home" replace />} />
+          <Route path="/home" element={<Home />} />
+        </Route>
+
+        {/* Rota para páginas não encontradas */}
+        <Route path="*" element={<Navigate to="/login" replace />} />
+      </Routes>
+    </Router>
+  );
+};
+
+export default App;
+
+```
