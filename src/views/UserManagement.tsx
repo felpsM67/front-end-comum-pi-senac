@@ -36,7 +36,8 @@ export default function UserManagement() {
         //   },
         // });
         // const data = await response.json();
-        const response = await api['get']('users');
+        // const response = await api.get('/users'); OUTRO MODO DE FAZER A REQUISIÇÃO
+        const response = await api['get']('/users');
         const { data } = response;
         console.log('usuarios', data);
 
