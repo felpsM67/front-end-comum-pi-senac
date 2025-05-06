@@ -23,7 +23,7 @@ function App() {
           <Route path="/users/new" element={<UserForm />} />
           <Route path="/users/edit/:id" element={<UserForm isEditing />} />
         </Route>
-        <Route path="*" element={<Navigate to="/login" replace />} />
+        <Route path="*" element={<Navigate to="/home" replace />} />
       </Routes>
     </Router>
   );
