@@ -1059,3 +1059,144 @@ const App: React.FC = () => {
 export default App;
 
 ```
+
+## Criação de Layouts
+
+1. Execute o seguinte comando para instalar o **react-icons/fi**:
+
+```bash
+npm install react-icons --legacy-peer-deps
+```
+
+2. Crie uma pasta **layout** dentro da pasta **src**.
+
+3. Na pasta layout que você acabou de criar crie o arquivo **RestrictedLayout** e insira o seguinte código:
+
+```javascript
+import React, { useState } from 'react';
+import { NavLink, Outlet } from 'react-router-dom';
+import { FiHome, FiUser, FiSettings, FiMenu } from 'react-icons/fi';
+
+const RestrictedLayout: React.FC = () => {
+  const [isSidebarOpen, setIsSidebarOpen] = useState<boolean>(true);
+
+  const toggleSidebar = () => {
+    setIsSidebarOpen(!isSidebarOpen);
+  };
+
+  const menuItems = [
+    { path: '/home', label: 'Home', icon: <FiHome /> },
+    { path: '/profile', label: 'Profile', icon: <FiUser /> },
+    { path: '/settings', label: 'Settings', icon: <FiSettings /> },
+  ];
+
+  return (
+    <div className="flex h-screen bg-gray-100">
+      {/* Sidebar */}
+      <div
+        className={`${
+          isSidebarOpen ? 'w-64' : 'w-16'
+        } bg-blue-600 text-white transition-all duration-300`}
+      >
+        <div className="flex items-center justify-between p-4">
+          <span
+            className={`${isSidebarOpen ? 'block' : 'hidden'} text-lg font-bold`}
+          >
+            Meu Sistema
+          </span>
+          <button
+            onClick={toggleSidebar}
+            className="text-white focus:outline-none"
+          >
+            <FiMenu size={24} />
+          </button>
+        </div>
+        <nav className="mt-4">
+          {menuItems.map((item) => (
+            <NavLink
+              key={item.path}
+              to={item.path}
+              className={({ isActive }) =>
+                `flex items-center gap-4 p-4 hover:bg-blue-500 transition-colors ${
+                  isActive ? 'bg-blue-700' : ''
+                }`
+              }
+            >
+              <span className="text-xl">{item.icon}</span>
+              <span className={`${isSidebarOpen ? 'block' : 'hidden'}`}>
+                {item.label}
+              </span>
+            </NavLink>
+          ))}
+        </nav>
+      </div>
+
+      {/* Main Content */}
+      <div className="flex flex-col flex-1">
+        {/* Top Bar */}
+        <div className="bg-white shadow p-4 flex items-center justify-between">
+          <h1 className="text-xl font-bold">Área Restrita</h1>
+          <button
+            onClick={toggleSidebar}
+            className="text-blue-600 focus:outline-none md:hidden"
+          >
+            <FiMenu size={24} />
+          </button>
+        </div>
+
+        {/* Content Area */}
+        <div className="flex-1 p-6 overflow-auto">
+          <Outlet />
+        </div>
+      </div>
+    </div>
+  );
+};
+
+export default RestrictedLayout;
+```
+
+4. Altere o arquivo **App.tsx** para:
+
+```javascript
+import React from 'react';
+import {
+  BrowserRouter as Router,
+  Routes,
+  Route,
+  Navigate,
+} from 'react-router-dom';
+import Login from './Login';
+import Home from './Home';
+import UserManagement from './UserManagement';
+import UserForm from './UserForm';
+import ProtectedRoute from '../ProtectedRoute';
+import RestrictedLayout from '../layout/RestrictedLayout';
+
+function App() {
+  return (
+    <Router>
+      <Routes>
+        {/* Rota de login */}
+        <Route path="/login" element={<Login />} />
+
+        {/* Rotas protegidas */}
+        <Route element={<ProtectedRoute />}>
+          <Route element={<RestrictedLayout />}>
+            <Route path="/" element={<Navigate to="/home" replace />} />
+            <Route path="/home" element={<Home />} />
+            <Route path="/users" element={<UserManagement />} />
+            <Route path="/users/new" element={<UserForm />} />
+            <Route path="/users/edit/:id" element={<UserForm isEditing />} />
+          </Route>
+        </Route>
+
+        {/* Rota para páginas não encontradas */}
+        <Route path="*" element={<Navigate to="/home" replace />} />
+      </Routes>
+    </Router>
+  );
+}
+
+export default App;
+```
