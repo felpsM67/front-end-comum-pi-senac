@@ -1,7 +1,8 @@
 import React, { useState } from 'react';
 import Sidebar from './Sidebar';
-import { FiHome, FiUser, FiSettings, FiMenu } from 'react-icons/fi';
-import { Outlet } from 'react-router';
+import MainContent from './MainContent';
+import { FiHome } from 'react-icons/fi';
+import { TbUsersGroup, TbUsersPlus } from 'react-icons/tb';
 
 const RestrictedLayout: React.FC = () => {
   const [isSidebarOpen, setIsSidebarOpen] = useState<boolean>(true);
@@ -12,8 +13,8 @@ const RestrictedLayout: React.FC = () => {
 
   const menuItems = [
     { path: '/home', label: 'Home', icon: <FiHome /> },
-    { path: '/profile', label: 'Profile', icon: <FiUser /> },
-    { path: '/settings', label: 'Settings', icon: <FiSettings /> },
+    { path: '/users', label: 'Listar Usuários', icon: <TbUsersGroup /> },
+    { path: '/users/new', label: 'Criar Usuário', icon: <TbUsersPlus /> },
   ];
 
   return (
@@ -23,24 +24,7 @@ const RestrictedLayout: React.FC = () => {
         toggleSidebar={toggleSidebar}
         menuItems={menuItems}
       />
-      {/* Main Content */}
-      <div className="flex flex-col flex-1">
-        {/* Top Bar */}
-        <div className="bg-white shadow p-4 flex items-center justify-between">
-          <h1 className="text-xl font-bold">Área Restrita</h1>
-          <button
-            onClick={toggleSidebar}
-            className="text-blue-600 focus:outline-none md:hidden"
-          >
-            <FiMenu size={24} />
-          </button>
-        </div>
-
-        {/* Content Area */}
-        <div className="flex-1 p-6 overflow-auto">
-          <Outlet />
-        </div>
-      </div>
+      <MainContent toggleSidebar={toggleSidebar} />
     </div>
   );
 };
