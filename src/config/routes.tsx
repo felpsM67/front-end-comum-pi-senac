@@ -6,6 +6,10 @@ import UserManagement from '../views/UserManagement';
 import UserForm from '../views/UserForm';
 import ProtectedRoute from '../ProtectedRoute';
 import RestrictedLayout from '../layout/RestrictedLayout';
+import ShoppingCart from '../components/ShoppingCart';
+import HomeCliente from '../components/HomeCliente';
+import DetalhesPrato from '../components/DetalhesPrato';
+import FormularioPrato from '../components/FormularioPrato';
 
 export interface RouteConfig {
   path: string;
@@ -17,6 +21,22 @@ const routes: RouteConfig[] = [
   {
     path: '/login',
     element: <Login />,
+  },
+  {
+    path: 'cardapio',
+    element: <HomeCliente />,
+  },
+  {
+    path: '/detalhes/:id',
+    element: <DetalhesPrato />,
+  },
+  {
+    path: '/novo-prato',
+    element: <FormularioPrato />,
+  },
+  {
+    path: '/carrinho',
+    element: <ShoppingCart />,
   },
   {
     path: '/',
