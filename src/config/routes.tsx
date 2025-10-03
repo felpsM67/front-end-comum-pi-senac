@@ -31,10 +31,6 @@ const routes: RouteConfig[] = [
     element: <DetalhesPrato />,
   },
   {
-    path: '/novo-prato',
-    element: <FormularioPrato />,
-  },
-  {
     path: '/carrinho',
     element: <ShoppingCart />,
   },
@@ -43,27 +39,35 @@ const routes: RouteConfig[] = [
     element: <ProtectedRoute />,
     children: [
       {
-        path: '/',
+        path: 'admin',
         element: <RestrictedLayout />,
         children: [
           {
-            path: '/',
-            element: <Navigate to="/home" replace />,
+            path: '',
+            element: <Navigate to="home" replace />,
           },
           {
-            path: '/home',
+            path: 'novo-prato',
+            element: <FormularioPrato />,
+          },
+          {
+            path: 'detalhes-prato/:id',
+            element: <FormularioPrato isEditing />,
+          },
+          {
+            path: 'home',
             element: <Home />,
           },
           {
-            path: '/users',
+            path: 'users',
             element: <UserManagement />,
           },
           {
-            path: '/users/new',
+            path: 'users/new',
             element: <UserForm />,
           },
           {
-            path: '/users/edit/:id',
+            path: 'users/edit/:id',
             element: <UserForm isEditing />,
           },
         ],
@@ -72,7 +76,7 @@ const routes: RouteConfig[] = [
   },
   {
     path: '*',
-    element: <Navigate to="/home" replace />,
+    element: <Navigate to="/cardapio" replace />,
   },
 ];
 

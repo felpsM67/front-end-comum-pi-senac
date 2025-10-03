@@ -1,15 +1,74 @@
-import React from 'react';
+import React, { useEffect, useState } from 'react';
 import useForm from '../hooks/useForm';
+import { useParams } from 'react-router';
+import api from '../http/api';
+import Snackbar from './Snackbar';
 
-const FormularioPrato: React.FC = () => {
-  const { values, errors, handleChange, validate } = useForm({
+export interface PratoFormProps {
+  isEditing?: boolean; // Indica se o formulário está no modo de edição
+}
+
+interface PratoFormParams extends Record<string, string | undefined> {
+  id?: string; // ID do usuário, opcional
+}
+
+interface SnackbarState {
+  message: string;
+  type: 'success' | 'error' | 'warning' | 'info';
+  duration: number;
+}
+
+const FormularioPrato: React.FC<PratoFormProps> = ({ isEditing = false }) => {
+  const [snackbar, setSnackbar] = useState<SnackbarState>({
+    message: '',
+    type: 'success',
+    duration: 0,
+  });
+  const { values, errors, handleChange, validate, updateValues } = useForm({
     nome: '',
     cozinha: '',
     descricao_resumida: '',
     descricao_detalhada: '',
     imagem: '',
-    valor: '',
+    valor: 0,
   });
+
+  const { id } = useParams<PratoFormParams>();
+
+  useEffect(() => {
+    if (isEditing && id) {
+      // Busca os dados do usuário para edição
+      const fetchUser = async () => {
+        try {
+          const response = await api.get(`/pratos/${id}`);
+          const {
+            nome,
+            cozinha,
+            descricao_detalhada,
+            descricao_resumida,
+            imagem,
+            valor,
+          } = response.data[0];
+          updateValues({
+            nome,
+            cozinha,
+            descricao_detalhada,
+            descricao_resumida,
+            imagem,
+            valor,
+          });
+        } catch {
+          setSnackbar({
+            message: 'Erro ao carregar os dados do usuário',
+            type: 'error',
+            duration: 10000,
+          });
+        }
+      };
+
+      fetchUser();
+    }
+  }, [id, isEditing]);
 
   const handleSubmit = (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
@@ -166,6 +225,12 @@ const FormularioPrato: React.FC = () => {
           Cadastrar Prato
         </button>
       </form>
+      <Snackbar
+        message={snackbar.message}
+        type={snackbar.type}
+        duration={snackbar.duration}
+        onClose={() => setSnackbar({ message: '', type: 'info', duration: 0 })}
+      />
     </div>
   );
 };

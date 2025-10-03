@@ -26,7 +26,7 @@ export default function Login() {
   const navigate = useNavigate();
 
   const login = async () => {
-    const duration = 10000;
+    const duration = 5000;
 
     if (!validate) {
       return;
@@ -51,7 +51,7 @@ export default function Login() {
         duration,
       });
       setTimeout(() => {
-        navigate('/home');
+        navigate('/admin/home');
       }, duration);
     } catch (error: unknown) {
       const axiosError = error as {
