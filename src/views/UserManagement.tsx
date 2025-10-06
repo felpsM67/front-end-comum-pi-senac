@@ -1,6 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import TabelaJS from '../components/TabelaJS';
+import api from '../http/api';
 
 interface User {
   id: number;
@@ -17,11 +18,12 @@ const UserManagement: React.FC = () => {
   useEffect(() => {
     const fetchData = async () => {
       try {
-        const response = await fetch('/api/users'); // Substitua pela URL correta da sua API
-        if (!response.ok) {
+        // const response = await fetch('/api/users'); // Substitua pela URL correta da sua API
+        const response = await api.get<User[]>('/users/');
+        if (!response.status.toString().startsWith('2')) {
           throw new Error('Erro ao buscar os usuários');
         }
-        const data: User[] = await response.json();
+        const data: User[] = response.data;
         setUsers(data);
       } catch (error) {
         console.error('Erro ao buscar os usuários:', error);

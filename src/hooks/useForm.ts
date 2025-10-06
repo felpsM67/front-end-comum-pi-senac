@@ -27,7 +27,7 @@ const useForm = <T extends Record<string, unknown>>(initialValues: T) => {
     return Object.keys(newErrors).length === 0; // Retorna true se não houver erros
   };
 
-  return { values, errors, handleChange, validate };
+  return { values, errors, handleChange, validate, updateValues: setValues };
 };
 
 export default useForm;

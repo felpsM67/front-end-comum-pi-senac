@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
 import TabelaJS from '../components/TabelaJS';
+import { useNavigate } from 'react-router-dom';
 
 interface Prato {
   id: number;
@@ -33,9 +34,10 @@ export default function Home() {
       valor: 50.0,
     },
   ]);
+  const navigate = useNavigate();
 
   const handleEdit = (prato: Prato) => {
-    console.log(`Editar prato com ID: ${prato.id}`);
+    navigate(`/admin/editar-prato/${prato.id}`);
   };
 
   const handleDelete = (prato: Prato) => {
@@ -44,6 +46,7 @@ export default function Home() {
   };
 
   const handleView = (prato: Prato) => {
+    navigate(`/admin/detalhes-prato/${prato.id}`);
     console.log(`Visualizar prato com ID: ${prato.id}`);
   };
 
@@ -56,19 +59,26 @@ export default function Home() {
   ];
 
   return (
-    <div className="flex flex-col items-center justify-center min-h-screen bg-gray-100 p-4">
-      <h2 className="text-2xl font-bold mb-4 text-center">Lista de Pratos</h2>
-      <div className="w-full max-w-4xl bg-white shadow-md rounded-lg overflow-hidden">
-        <TabelaJS
-          columns={columns}
-          data={pratos}
-          actions={{
-            edit: handleEdit,
-            delete: handleDelete,
-            view: handleView,
-          }}
-        />
+    <div className="p-6">
+      <div className="flex justify-between items-center mb-4">
+        <h2 className="text-2xl font-bold">Lista de Pratos</h2>
+        <button
+          type="button"
+          onClick={() => navigate('/admin/novo-prato')}
+          className="bg-blue-500 text-white px-4 py-2 rounded hover:bg-blue-600"
+        >
+          Novo Prato
+        </button>
       </div>
+      <TabelaJS
+        columns={columns}
+        data={pratos}
+        actions={{
+          edit: handleEdit,
+          delete: handleDelete,
+          view: handleView,
+        }}
+      />
     </div>
   );
 }
