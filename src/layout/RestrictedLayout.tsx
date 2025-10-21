@@ -1,7 +1,20 @@
 import React, { useContext, useState } from 'react';
+import {
+  FiDisc,
+  FiHome,
+  FiLogOut,
+  FiMenu,
+  FiUser,
+  FiUsers,
+} from 'react-icons/fi';
 import { Outlet } from 'react-router-dom';
-import { FiMenu, FiHome, FiSettings, FiLogOut, FiUser } from 'react-icons/fi';
 import { AuthContext } from '../context/authContext';
+
+export interface MenuItem {
+  path: string;
+  label: string;
+  icon: React.ReactNode;
+}
 
 const RestrictedLayout: React.FC = () => {
   const [isSidebarOpen, setIsSidebarOpen] = useState<boolean>(false);
@@ -19,10 +32,11 @@ const RestrictedLayout: React.FC = () => {
     setIsSidebarOpen(!isSidebarOpen);
   };
 
-  const menuItems = [
-    { path: '/home', label: 'Home', icon: <FiHome /> },
-    { path: '/settings', label: 'Configurações', icon: <FiSettings /> },
-    { path: '/logout', label: 'Logout', icon: <FiLogOut /> },
+  const menuItems: MenuItem[] = [
+    { path: '/admin/home', label: 'Home', icon: <FiHome /> },
+    { path: '/admin/logout', label: 'Logout', icon: <FiLogOut /> },
+    { path: '/admin/novo-prato', label: 'Novo Prato', icon: <FiDisc /> },
+    { path: '/admin/usuarios', label: 'Usuários', icon: <FiUsers /> },
   ];
 
   return (

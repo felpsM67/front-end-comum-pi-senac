@@ -77,15 +77,15 @@ const routes: RouteConfig[] = [
             element: <Home />,
           },
           {
-            path: 'users',
+            path: 'usuarios',
             element: <UserManagement />,
           },
           {
-            path: 'users/new',
+            path: 'usuarios/novo',
             element: <UserForm />,
           },
           {
-            path: 'users/edit/:id',
+            path: 'usuarios/editar/:id',
             element: <UserForm isEditing />,
           },
         ],
