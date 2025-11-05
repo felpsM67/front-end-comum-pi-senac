@@ -51,7 +51,7 @@ const FormularioPrato: React.FC<PratoFormProps> = ({ isEditing = false }) => {
             descricao_resumida,
             imagem,
             valor,
-          } = response.data[0];
+          } = response.data;
           updateValues({
             nome,
             cozinha,
@@ -62,7 +62,7 @@ const FormularioPrato: React.FC<PratoFormProps> = ({ isEditing = false }) => {
           });
         } catch {
           setSnackbar({
-            message: 'Erro ao carregar os dados do usuário',
+            message: 'Erro ao carregar os dados do prato.',
             type: 'error',
             duration: 10000,
           });

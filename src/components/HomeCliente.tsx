@@ -5,8 +5,10 @@ import '../estilos/Home.css';
 import api from '../http/api';
 import Prato from '../interface/Prato';
 import CardPrato from './CardPrato';
+import { useIsMounted } from '../hooks/useIsMounted';
 
 function HomeCliente() {
+  const isMounted = useIsMounted();
   const [pratos, setPratos] = React.useState<Prato[] | []>([]);
 
   useEffect(() => {
@@ -14,8 +16,10 @@ function HomeCliente() {
       const response = await api.get<Prato[]>('/pratos');
       setPratos(response.data);
     };
-    fetchPratos();
-  }, []);
+    if (isMounted()) {
+      fetchPratos();
+    }
+  }, [isMounted]);
 
   const cartContext = React.useContext(CartContext);
 
