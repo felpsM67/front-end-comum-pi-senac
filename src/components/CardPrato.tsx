@@ -1,5 +1,14 @@
-import React, { FC } from 'react';
+import React, { FC, useState } from 'react';
 import { Link } from 'react-router';
+import { CartContext } from '../context/cartContext';
+import Prato from '../interface/Prato';
+import Snackbar from './Snackbar';
+
+interface SnackbarState {
+  message: string;
+  type: 'success' | 'error' | 'warning' | 'info';
+  duration: number;
+}
 
 interface CardPratoProps {
   id?: number;
@@ -12,6 +21,40 @@ interface CardPratoProps {
 }
 
 const CardPrato: FC<CardPratoProps> = (props) => {
+  const cartContext = React.useContext(CartContext);
+  const [snackbar, setSnackbar] = useState<SnackbarState>({
+    message: '',
+    type: 'success',
+    duration: 0,
+  });
+
+  if (!cartContext) {
+    throw new Error('CartContext não está disponível');
+  }
+
+  const { adicionarPrato } = cartContext;
+
+  const addDishToCart = () => {
+    const pratoExists = cartContext.pratos?.some(
+      (prato) => prato.id === props.id,
+    );
+    if (!pratoExists) {
+      const pratoToAdd: Prato = {
+        id: props.id,
+        nome: props.nome,
+        cozinha: props.cozinha,
+        descricao_resumida: props.descricao_resumida,
+        imagem: props.imagem,
+        valor: props.valor,
+      } as Prato;
+      adicionarPrato(pratoToAdd);
+      setSnackbar({
+        message: 'Prato adicionado ao carrinho com sucesso!',
+        type: 'success',
+        duration: 10000,
+      });
+    }
+  };
   return (
     <div className="min-h-full relative bg-white shadow-md rounded-lg overflow-hidden">
       {/* Imagem do prato */}
@@ -40,12 +83,13 @@ const CardPrato: FC<CardPratoProps> = (props) => {
           >
             Ir para carrinho
           </Link>
-          <a
-            href="#"
-            className="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100"
+          <button
+            type="button"
+            className="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 cursor-pointer"
+            onClick={addDishToCart}
           >
             Adicionar ao carrinho +
-          </a>
+          </button>
           <Link
             to={`/detalhes/${props?.id}`}
             className="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100"
@@ -54,6 +98,12 @@ const CardPrato: FC<CardPratoProps> = (props) => {
           </Link>
         </div>
       </div>
+      <Snackbar
+        message={snackbar.message}
+        type={snackbar.type}
+        duration={snackbar.duration}
+        onClose={() => setSnackbar({ message: '', type: 'info', duration: 0 })}
+      />
     </div>
   );
 };

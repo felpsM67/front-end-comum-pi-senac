@@ -1,6 +1,6 @@
 /* eslint-disable react/require-default-props */
 import * as React from 'react';
-import { useState, useEffect, JSX } from 'react';
+import { JSX, useEffect, useState } from 'react';
 
 interface SnackbarProps {
   message: string; // Mensagem a ser exibida no Snackbar

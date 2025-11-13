@@ -1,7 +1,8 @@
 /* eslint-disable @typescript-eslint/no-unused-vars */
-import React, { useContext, useState } from 'react';
-import { CartContext } from '../context/cartContext';
+import React, { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router';
+import { CartContext } from '../context/cartContext';
+import Prato from '../interface/Prato';
 
 interface Dish {
   id: number;
@@ -11,45 +12,70 @@ interface Dish {
 }
 
 const ShoppingCart: React.FC = () => {
-  const [dishes, setDishes] = useState<Dish[]>([
-    { id: 1, name: 'Prato 1', price: 25.0, quantity: 1 },
-    { id: 2, name: 'Prato 2', price: 30.0, quantity: 2 },
-    { id: 3, name: 'Prato 3', price: 20.0, quantity: 1 },
-  ]);
+  const cartContext = React.useContext(CartContext);
+
+  if (!cartContext) {
+    throw new Error('CartContext não está disponível');
+  }
+
+  const { pratos } = cartContext;
+  const [dishes, setDishes] = useState<Dish[]>([]);
+  const [total, setTotal] = useState<number>(0);
+
+  useEffect(() => {
+    // Sincroniza os pratos do contexto com o estado local
+
+    const mapPratos = (prato: Prato) => ({
+      id: prato.id!,
+      name: prato.nome,
+      price: prato.valor!,
+      quantity: 1,
+    });
+    if (pratos?.length) {
+      const initialDishes = pratos?.map(mapPratos);
+      const TotalInitial = initialDishes.reduce(
+        (sum, dish) => sum + dish.price * dish.quantity,
+        0,
+      );
+
+      setDishes(initialDishes);
+      setTotal(TotalInitial);
+    }
+  }, [pratos]);
+  const updateTotal = () => {
+    // Esta função pode ser usada para atualizar o total se necessário
+    const countTotal = (sum: number, dish: Dish) => {
+      const newTotal = sum + dish.price * dish.quantity;
+
+      return newTotal;
+    };
+
+    const total = dishes?.reduce(countTotal, 0);
+
+    setTotal(total);
+  };
 
   const navigate = useNavigate();
   const [address, setAddress] = useState<string>('');
   const [paymentInfo, setPaymentInfo] = useState<string>('');
 
   const handleQuantityChange = (id: number, quantity: number) => {
-    setDishes((prevDishes) =>
-      prevDishes.map((dish) =>
-        dish.id === id ? { ...dish, quantity: Math.max(0, quantity) } : dish,
-      ),
-    );
+    updateQuantity(id, quantity);
   };
 
-  const total = dishes.reduce(
-    (sum, dish) => sum + dish.price * dish.quantity,
-    0,
-  );
+  const updateQuantity = (id: number, quantity: number) => {
+    const dishUpdated = (prevDishes: Dish[]) => {
+      return prevDishes.map((dish) =>
+        dish.id === id ? { ...dish, quantity: Math.max(0, quantity) } : dish,
+      );
+    };
+    setDishes(dishUpdated);
+    updateTotal();
+  };
 
   const handleConfirmOrder = () => {
-    console.log('Pedido confirmado:', { dishes, address, paymentInfo });
     alert('Pedido confirmado!');
   };
-
-  const cartContext = useContext(CartContext);
-
-  if (!cartContext) {
-    throw new Error('CartContext não está disponível');
-  }
-
-  const {
-    pratos: pratosNoCarrinho,
-    adicionarPrato,
-    removerPrato,
-  } = cartContext;
 
   return (
     <div className="flex flex-col lg:flex-row gap-6 p-6">
@@ -57,11 +83,11 @@ const ShoppingCart: React.FC = () => {
       <div className="flex-1 bg-white shadow-lg rounded-lg p-4">
         <h2 className="text-xl font-bold mb-4">Dados do Cliente</h2>
         <button
-            onClick={() => navigate(-1)}
-            className="bg-gray-300 text-gray-700 px-4 py-2 rounded hover:bg-gray-400"
-          >
-            Voltar
-          </button>
+          onClick={() => navigate(-1)}
+          className="bg-gray-300 text-gray-700 px-4 py-2 rounded hover:bg-gray-400"
+        >
+          Voltar
+        </button>
         <div className="mb-4">
           <label className="block text-sm font-medium text-gray-700 mb-1">
             Endereço de Entrega
