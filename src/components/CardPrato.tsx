@@ -1,7 +1,6 @@
 import React, { FC, useState } from 'react';
 import { Link } from 'react-router';
-import { CartContext } from '../context/cartContext';
-import Prato from '../interface/Prato';
+import { CartContext, PratoCarrinho } from '../context/cartContext';
 import Snackbar from './Snackbar';
 
 interface SnackbarState {
@@ -32,28 +31,27 @@ const CardPrato: FC<CardPratoProps> = (props) => {
     throw new Error('CartContext não está disponível');
   }
 
-  const { adicionarPrato } = cartContext;
+  const { pratos, adicionarPrato } = cartContext;
 
   const addDishToCart = () => {
-    const pratoExists = cartContext.pratos?.some(
-      (prato) => prato.id === props.id,
-    );
+    const pratoExists = pratos?.find((prato) => prato.id === props.id);
     if (!pratoExists) {
-      const pratoToAdd: Prato = {
+      const pratoToAdd: PratoCarrinho = {
         id: props.id,
         nome: props.nome,
-        cozinha: props.cozinha,
-        descricao_resumida: props.descricao_resumida,
-        imagem: props.imagem,
         valor: props.valor,
-      } as Prato;
+        quantidade: 1,
+      } as PratoCarrinho;
       adicionarPrato(pratoToAdd);
-      setSnackbar({
-        message: 'Prato adicionado ao carrinho com sucesso!',
-        type: 'success',
-        duration: 10000,
-      });
+    } else {
+      pratoExists.quantidade += 1;
+      adicionarPrato(pratoExists);
     }
+    setSnackbar({
+      message: `Prato adicionado ao carrinho com sucesso! Quantidade: ${pratoExists ? pratoExists.quantidade : 1}`,
+      type: 'success',
+      duration: 5000,
+    });
   };
   return (
     <div className="min-h-full relative bg-white shadow-md rounded-lg overflow-hidden">
