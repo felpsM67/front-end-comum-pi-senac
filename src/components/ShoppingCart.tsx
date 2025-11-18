@@ -6,20 +6,7 @@ import QuantityInput from '../components/ui/QuantityInput';
 import SectionCard from '../components/ui/SectionCard';
 import TextAreaField from '../components/ui/TextAreaField';
 import { CartContext } from '../context/cartContext';
-
-const formatPhoneNumber = (value: string) => {
-  if (!value) return '';
-
-  let digits = value.replace(/\D/g, '');
-  digits = digits.substring(0, 11);
-
-  if (digits.length <= 2) return `(${digits}`;
-  if (digits.length <= 6) return digits.replace(/(\d{2})(\d+)/, '($1) $2');
-  if (digits.length <= 10) {
-    return digits.replace(/(\d{2})(\d{4})(\d+)/, '($1) $2-$3');
-  }
-  return digits.replace(/(\d{2})(\d{5})(\d{4})/, '($1) $2-$3');
-};
+import PhoneField from '../components/ui/PhoneField';
 
 const ShoppingCart: React.FC = () => {
   const cartContext = useContext(CartContext);
@@ -57,11 +44,6 @@ const ShoppingCart: React.FC = () => {
     updateQuantity(id, quantity);
   };
 
-  const changeNumber = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const formattedPhoneNumber = formatPhoneNumber(e.target.value);
-    setPhone(formattedPhoneNumber);
-  };
-
   const handleConfirmOrder = () => {
     if (!pratos?.length) {
       alert('Seu carrinho está vazio.');
@@ -90,13 +72,12 @@ const ShoppingCart: React.FC = () => {
           className="flex-1"
         >
           <div className="space-y-4">
-            <FormField
-              label="Telefone celular"
-              type="tel"
-              placeholder="(DD) 9XXXX-XXXX"
+            <PhoneField
+              label="Telefone Celular"
+              name="clienteTelefone"
               value={phone}
-              onChange={changeNumber}
-              helperText="Usaremos esse número para contato sobre o pedido."
+              onChange={setPhone}
+              helperText="Usaremos este número para contato sobre o pedido."
             />
 
             <TextAreaField
