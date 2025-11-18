@@ -72,6 +72,7 @@ const OrderForm: React.FC<OrderFormProps> = ({ isEditing = false }) => {
   const [itemErrors, setItemErrors] = useState<ItemErrors[]>([]);
   const [loadingOrder, setLoadingOrder] = useState(false);
   const [submitting, setSubmitting] = useState(false);
+
   const [snackbar, setSnackbar] = useState<SnackbarState>({
     message: '',
     type: 'success',
@@ -86,14 +87,27 @@ const OrderForm: React.FC<OrderFormProps> = ({ isEditing = false }) => {
   const isMounted = useIsMounted();
 
   // máscara simples de telefone
-  const formatPhoneNumber = (value: string) => {
-    if (!value) return '';
-    value = value.replace(/\D/g, '');
-    value = value.substring(0, 11);
-    if (value.length <= 10) {
-      return value.replace(/(\d{2})(\d{4})(\d{0,4})/, '($1) $2-$3').trim();
+  const formatPhoneNumber = (digits: string) => {
+    if (!digits) return '';
+
+    const value = digits.replace(/\D/g, '').slice(0, 11);
+
+    if (value.length <= 2) {
+      return value;
     }
-    return value.replace(/(\d{2})(\d{5})(\d{0,4})/, '($1) $2-$3').trim();
+
+    if (value.length <= 6) {
+      // (11) 1234
+      return `(${value.slice(0, 2)}) ${value.slice(2)}`;
+    }
+
+    if (value.length <= 10) {
+      // (11) 1234-5678
+      return `(${value.slice(0, 2)}) ${value.slice(2, 6)}-${value.slice(6)}`;
+    }
+
+    // (11) 91234-5678
+    return `(${value.slice(0, 2)}) ${value.slice(2, 7)}-${value.slice(7)}`;
   };
 
   // Buscar lista de produtos (pratos)
@@ -130,7 +144,10 @@ const OrderForm: React.FC<OrderFormProps> = ({ isEditing = false }) => {
         const { userId, clienteTelefone, itens } = response.data;
 
         setUserId(userId ?? '');
-        setClienteTelefone(clienteTelefone ?? '');
+        setClienteTelefone(
+          (clienteTelefone ?? '').replace(/\D/g, '').slice(0, 11),
+        );
+
         setItens(
           itens && itens.length
             ? itens.map((item) => ({
@@ -241,8 +258,7 @@ const OrderForm: React.FC<OrderFormProps> = ({ isEditing = false }) => {
         'Informe o usuário ou o telefone do cliente.';
     }
 
-    const cleanedPhone = clienteTelefone.replace(/\D/g, '');
-    if (clienteTelefone && cleanedPhone.length < 10) {
+    if (clienteTelefone && clienteTelefone.length < 10) {
       newFieldErrors.clienteTelefone = 'Informe um telefone válido.';
     }
 
@@ -320,7 +336,7 @@ const OrderForm: React.FC<OrderFormProps> = ({ isEditing = false }) => {
 
     const payload: OrderPayload = {
       userId: userId || undefined,
-      clienteTelefone: clienteTelefone || undefined,
+      clienteTelefone: clienteTelefone || undefined, // <– aqui já é só dígito
       itens: itens.map((item) => ({
         produtoId: item.produtoId,
         quantidade: Number(item.quantidade),
@@ -362,6 +378,11 @@ const OrderForm: React.FC<OrderFormProps> = ({ isEditing = false }) => {
     return itens.some((item, i) => i !== index && item.produtoId === produtoId);
   };
 
+  const handleTelefoneChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const digits = e.target.value.replace(/\D/g, '').slice(0, 11);
+    setClienteTelefone(digits);
+  };
+
   const title = isEditing ? 'Editar pedido' : 'Criar pedido';
   const subtitle = isEditing
     ? 'Atualize os dados do pedido.'
@@ -388,10 +409,8 @@ const OrderForm: React.FC<OrderFormProps> = ({ isEditing = false }) => {
               name="clienteTelefone"
               type="text"
               placeholder="(00) 00000-0000"
-              value={clienteTelefone}
-              onChange={(e) =>
-                setClienteTelefone(formatPhoneNumber(e.target.value))
-              }
+              value={formatPhoneNumber(clienteTelefone)}
+              onChange={handleTelefoneChange}
               error={fieldErrors.clienteTelefone}
             />
           </div>
