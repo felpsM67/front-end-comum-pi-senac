@@ -8,6 +8,13 @@ import api from '../http/api';
 
 export interface Order {
   id: number;
+  cliente_nome: string;
+  status: string;
+  total: number;
+}
+
+export interface OrderMapped extends Order {
+  id: number;
   cliente: string;
   status: string;
   total: number;
@@ -15,7 +22,7 @@ export interface Order {
 
 const OrderManagement: React.FC = () => {
   const navigate = useNavigate();
-  const [orders, setOrders] = useState<Order[]>([]);
+  const [orders, setOrders] = useState<OrderMapped[]>([]);
   const [loading, setLoading] = useState<boolean>(true);
   const [erro, setErro] = useState<string | null>(null);
 
@@ -27,7 +34,13 @@ const OrderManagement: React.FC = () => {
 
         const response = await api.get<Order[]>('/pedidos');
 
-        setOrders(response.data ?? []);
+        const ordersMapped = response.data.map((order) => ({
+          ...order,
+          cliente: order.cliente_nome,
+          total: Number(order.total.toFixed(2)),
+        }));
+
+        setOrders(ordersMapped ?? []);
       } catch (error) {
         console.error('Erro ao buscar os pedidos:', error);
         setErro('Não foi possível carregar a lista de pedidos.');
@@ -57,7 +70,7 @@ const OrderManagement: React.FC = () => {
     navigate(`/admin/pedidos/detalhes/${order.id}`);
   };
 
-  const columns: (keyof Order | 'Ações')[] = [
+  const columns: (keyof OrderMapped | 'Ações')[] = [
     'cliente',
     'status',
     'total',
