@@ -1,6 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import TabelaJS from '../components/TabelaJS';
+import EmptyState from '../components/ui/EmptyState';
 import LinkButton from '../components/ui/LinkButton';
 import SectionCard from '../components/ui/SectionCard';
 import { useIsMounted } from '../hooks/useIsMounted';
@@ -82,6 +83,17 @@ const UserManagement: React.FC = () => {
           <div className="rounded-lg border border-red-100 bg-red-50 px-4 py-3 text-sm text-red-700">
             {erro}
           </div>
+        ) : users.length === 0 ? (
+          <EmptyState
+            title="Nenhum usuário cadastrado."
+            description="Cadastre o primeiro usuário para começar a usar o sistema."
+            icon={<span>👤</span>}
+            actions={
+              <LinkButton to="/admin/usuarios/novo" variant="primary">
+                Criar usuário
+              </LinkButton>
+            }
+          />
         ) : (
           <TabelaJS
             columns={columns}

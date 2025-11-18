@@ -5,11 +5,12 @@ import {
   FiHome,
   FiLogOut,
   FiMenu,
-  FiUser,
   FiUsers,
 } from 'react-icons/fi';
 import { NavLink, Outlet } from 'react-router-dom';
-import { AuthContext } from '../context/authContext';
+import { AuthContext } from '../../context/authContext';
+import UserMenu from '../ui/UserMenu';
+import CartIconButton from '../ui/CartIconButton';
 
 export interface MenuItem {
   path: string;
@@ -19,7 +20,6 @@ export interface MenuItem {
 
 const RestrictedLayout: React.FC = () => {
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
-  const [isUserMenuOpen, setIsUserMenuOpen] = useState(false);
 
   const authContext = useContext(AuthContext);
 
@@ -27,11 +27,7 @@ const RestrictedLayout: React.FC = () => {
     throw new Error('AuthContext não está disponível');
   }
 
-  const { usuario /*, verificarLogin */ } = authContext;
-
   const toggleSidebar = () => setIsSidebarOpen((prev) => !prev);
-  const toggleUserMenu = () => setIsUserMenuOpen((prev) => !prev);
-  const closeUserMenu = () => setIsUserMenuOpen(false);
 
   const menuItems: MenuItem[] = [
     { path: '/admin/home', label: 'Home', icon: <FiHome /> },
@@ -114,53 +110,9 @@ const RestrictedLayout: React.FC = () => {
             </h1>
           </div>
 
-          <div className="relative">
-            <button
-              type="button"
-              onClick={toggleUserMenu}
-              className="flex items-center gap-2 rounded-full bg-slate-100 px-3 py-1.5 text-sm font-medium text-slate-700 shadow-sm outline-none transition hover:bg-slate-200"
-              aria-haspopup="true"
-              aria-expanded={isUserMenuOpen}
-            >
-              <FiUser size={20} />
-              <span className="hidden sm:inline truncate max-w-[120px]">
-                {usuario?.email ?? 'Usuário'}
-              </span>
-            </button>
-
-            {isUserMenuOpen && (
-              <div
-                className="absolute right-0 mt-2 w-48 overflow-hidden rounded-lg border border-slate-100 bg-white text-sm text-slate-700 shadow-lg"
-                role="menu"
-              >
-                <div className="border-b border-slate-100 px-4 py-3">
-                  <p className="truncate text-xs font-semibold text-slate-900">
-                    {usuario?.email ?? 'Usuário'}
-                  </p>
-                  <p className="mt-0.5 text-[11px] uppercase tracking-wide text-slate-500">
-                    {usuario?.role ?? 'Sem perfil'}
-                  </p>
-                </div>
-
-                <NavLink
-                  to="/user/details"
-                  className="block px-4 py-2 hover:bg-slate-50"
-                  role="menuitem"
-                  onClick={closeUserMenu}
-                >
-                  Detalhes do usuário
-                </NavLink>
-
-                <NavLink
-                  to="/logout"
-                  className="block px-4 py-2 hover:bg-slate-50"
-                  role="menuitem"
-                  onClick={closeUserMenu}
-                >
-                  Logout
-                </NavLink>
-              </div>
-            )}
+          <div className="flex items-center gap-3">
+            <CartIconButton />
+            <UserMenu />
           </div>
         </header>
 
@@ -174,4 +126,3 @@ const RestrictedLayout: React.FC = () => {
 };
 
 export default RestrictedLayout;
- 

@@ -1,6 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import TabelaJS from '../components/TabelaJS';
+import EmptyState from '../components/ui/EmptyState';
 import LinkButton from '../components/ui/LinkButton';
 import SectionCard from '../components/ui/SectionCard';
 import api from '../http/api';
@@ -69,7 +70,7 @@ const OrderManagement: React.FC = () => {
         title="Gestão de pedidos"
         subtitle="Visualize, edite e acompanhe os pedidos realizados."
         actions={
-          <LinkButton to="/admin/pedido/new" variant="primary">
+          <LinkButton to="/admin/pedidos/novo" variant="primary">
             Novo pedido
           </LinkButton>
         }
@@ -83,14 +84,16 @@ const OrderManagement: React.FC = () => {
             {erro}
           </div>
         ) : orders.length === 0 ? (
-          <div className="flex flex-col items-center justify-center py-10 text-center">
-            <p className="text-sm font-medium text-slate-700">
-              Nenhum pedido encontrado.
-            </p>
-            <p className="mt-1 text-xs text-slate-500">
-              Assim que novos pedidos forem realizados, eles aparecerão aqui.
-            </p>
-          </div>
+          <EmptyState
+            title="Nenhum pedido encontrado."
+            description="Assim que novos pedidos forem realizados, eles aparecerão aqui."
+            icon={<span>🧾</span>}
+            actions={
+              <LinkButton to="/admin/pedidos/novo" variant="primary">
+                Criar primeiro pedido
+              </LinkButton>
+            }
+          />
         ) : (
           <TabelaJS
             columns={columns}

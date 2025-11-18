@@ -1,6 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import TabelaJS from '../components/TabelaJS';
+import EmptyState from '../components/ui/EmptyState';
 import LinkButton from '../components/ui/LinkButton';
 import SectionCard from '../components/ui/SectionCard';
 import api from '../http/api';
@@ -95,6 +96,12 @@ export default function Home() {
           <div className="rounded-lg border border-red-100 bg-red-50 px-4 py-3 text-sm text-red-700">
             {erro}
           </div>
+        ) : pratos.length === 0 ? (
+          <EmptyState
+            title="Nenhum prato disponível no momento."
+            description="Volte mais tarde ou entre em contato com o restaurante."
+            icon={<span>🍽️</span>}
+          />
         ) : (
           <TabelaJS
             columns={columns}
