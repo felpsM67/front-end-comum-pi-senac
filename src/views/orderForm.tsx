@@ -3,6 +3,8 @@ import { useNavigate, useParams } from 'react-router-dom';
 import api from '../http/api';
 import { useIsMounted } from '../hooks/useIsMounted';
 import Snackbar from '../components/Snackbar';
+import PhoneField from '../components/ui/PhoneField';
+import CurrencyField from '../components/ui/CurrencyField';
 
 import SectionCard from '../components/ui/SectionCard';
 import FormField from '../components/ui/FormField';
@@ -85,30 +87,6 @@ const OrderForm: React.FC<OrderFormProps> = ({ isEditing = false }) => {
   const { id } = useParams<OrderFormParams>();
   const navigate = useNavigate();
   const isMounted = useIsMounted();
-
-  // máscara simples de telefone
-  const formatPhoneNumber = (digits: string) => {
-    if (!digits) return '';
-
-    const value = digits.replace(/\D/g, '').slice(0, 11);
-
-    if (value.length <= 2) {
-      return value;
-    }
-
-    if (value.length <= 6) {
-      // (11) 1234
-      return `(${value.slice(0, 2)}) ${value.slice(2)}`;
-    }
-
-    if (value.length <= 10) {
-      // (11) 1234-5678
-      return `(${value.slice(0, 2)}) ${value.slice(2, 6)}-${value.slice(6)}`;
-    }
-
-    // (11) 91234-5678
-    return `(${value.slice(0, 2)}) ${value.slice(2, 7)}-${value.slice(7)}`;
-  };
 
   // Buscar lista de produtos (pratos)
   useEffect(() => {
@@ -336,7 +314,7 @@ const OrderForm: React.FC<OrderFormProps> = ({ isEditing = false }) => {
 
     const payload: OrderPayload = {
       userId: userId || undefined,
-      clienteTelefone: clienteTelefone || undefined, // <– aqui já é só dígito
+      clienteTelefone: clienteTelefone || undefined, // já é só dígitos
       itens: itens.map((item) => ({
         produtoId: item.produtoId,
         quantidade: Number(item.quantidade),
@@ -378,9 +356,14 @@ const OrderForm: React.FC<OrderFormProps> = ({ isEditing = false }) => {
     return itens.some((item, i) => i !== index && item.produtoId === produtoId);
   };
 
-  const handleTelefoneChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const digits = e.target.value.replace(/\D/g, '').slice(0, 11);
-    setClienteTelefone(digits);
+  const handleItemPriceChange = (index: number, value: number | null) => {
+    setItens((prev) =>
+      prev.map((item, i) =>
+        i === index
+          ? { ...item, precoUnitario: value === null ? '' : value }
+          : item,
+      ),
+    );
   };
 
   const title = isEditing ? 'Editar pedido' : 'Criar pedido';
@@ -404,14 +387,13 @@ const OrderForm: React.FC<OrderFormProps> = ({ isEditing = false }) => {
               error={fieldErrors.userId}
             />
 
-            <FormField
+            <PhoneField
               label="Telefone do cliente (opcional)"
               name="clienteTelefone"
-              type="text"
-              placeholder="(00) 00000-0000"
-              value={formatPhoneNumber(clienteTelefone)}
-              onChange={handleTelefoneChange}
+              value={clienteTelefone} // só dígitos
+              onChange={setClienteTelefone} // recebe só dígitos
               error={fieldErrors.clienteTelefone}
+              helperText="Informe um telefone ou um usuário para identificar o cliente."
             />
           </div>
 
@@ -461,17 +443,15 @@ const OrderForm: React.FC<OrderFormProps> = ({ isEditing = false }) => {
                 />
 
                 {/* Preço unitário (pode ser sobrescrito manualmente) */}
-                <FormField
+                <CurrencyField
                   label="Preço unitário"
                   name={`precoUnitario-${index}`}
-                  type="number"
-                  min={0}
-                  step="0.01"
-                  placeholder="R$"
-                  value={item.precoUnitario?.toString() ?? ''}
-                  onChange={(e) =>
-                    handleItemChange(index, 'precoUnitario', e.target.value)
+                  value={
+                    typeof item.precoUnitario === 'number'
+                      ? item.precoUnitario
+                      : null
                   }
+                  onChange={(val) => handleItemPriceChange(index, val)}
                   error={itemErrors[index]?.precoUnitario}
                 />
 
