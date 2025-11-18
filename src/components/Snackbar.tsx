@@ -1,55 +1,101 @@
-/* eslint-disable react/require-default-props */
-import * as React from 'react';
-import { useState, useEffect, JSX } from 'react';
+import React, { useEffect, useRef, useState } from 'react';
+
+type SnackbarType = 'success' | 'error' | 'warning' | 'info';
+
+type SnackbarPosition =
+  | 'center'
+  | 'center-right'
+  | 'center-left'
+  | 'top-center'
+  | 'top-left'
+  | 'top-right'
+  | 'bottom-center'
+  | 'bottom-left'
+  | 'bottom-right';
 
 interface SnackbarProps {
-  message: string; // Mensagem a ser exibida no Snackbar
-  type?: 'success' | 'error' | 'warning' | 'info'; // Tipo do Snackbar
-  duration?: number; // Duração em milissegundos
-  onClose?: () => void; // Função chamada ao fechar o Snackbar
+  message: string;
+  type?: SnackbarType;
+  duration?: number;
+  position?: SnackbarPosition;
+  onClose?: () => void;
 }
 
-function Snackbar({
+const TYPE_STYLES: Record<SnackbarType, string> = {
+  success: 'bg-green-500 text-white',
+  error: 'bg-red-500 text-white',
+  warning: 'bg-yellow-500 text-black',
+  info: 'bg-blue-500 text-white',
+};
+
+const POSITION_STYLES: Record<SnackbarPosition, string> = {
+  center: 'top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2',
+  'center-right': 'top-1/2 right-4 -translate-y-1/2',
+  'center-left': 'top-1/2 left-4 -translate-y-1/2',
+  'top-center': 'top-4 left-1/2 -translate-x-1/2',
+  'top-left': 'top-4 left-4',
+  'top-right': 'top-4 right-4',
+  'bottom-center': 'bottom-4 left-1/2 -translate-x-1/2',
+  'bottom-left': 'bottom-4 left-4',
+  'bottom-right': 'bottom-4 right-4',
+};
+
+const Snackbar: React.FC<SnackbarProps> = ({
   message,
-  type = 'success', // Tipo do Snackbar
-  duration = 10000, // Valor padrão
-  onClose = undefined, // Valor padrão
-}: SnackbarProps): JSX.Element | null {
-  const [visible, setVisible] = useState<boolean>(false);
+  type = 'info',
+  duration = 3000,
+  position = 'bottom-center',
+  onClose,
+}) => {
+  const [visible, setVisible] = useState(false);
+  const timerRef = useRef<number | null>(null);
 
   useEffect(() => {
-    if (message) {
-      setVisible(true);
-
-      // Oculta o snackbar após o tempo definido
-      const timer = setTimeout(() => {
-        setVisible(false);
-        if (onClose) onClose();
-      }, duration);
-
-      return () => clearTimeout(timer);
+    // se não tiver mensagem, esconde e limpa timer
+    if (!message) {
+      setVisible(false);
+      if (timerRef.current) {
+        clearTimeout(timerRef.current);
+        timerRef.current = null;
+      }
+      return;
     }
-    return undefined;
+
+    setVisible(true);
+
+    timerRef.current = window.setTimeout(() => {
+      setVisible(false);
+      timerRef.current = null;
+      if (onClose) onClose();
+    }, duration);
+
+    return () => {
+      if (timerRef.current) {
+        clearTimeout(timerRef.current);
+        timerRef.current = null;
+      }
+    };
   }, [message, duration, onClose]);
 
   if (!visible) return null;
 
-  const typeStyles: Record<string, string> = {
-    success: 'bg-green-500 text-white',
-    error: 'bg-red-500 text-white',
-    warning: 'bg-yellow-500 text-black',
-    info: 'bg-blue-500 text-white',
-  };
+  const typeClass = TYPE_STYLES[type] ?? TYPE_STYLES.info;
+  const positionClass = POSITION_STYLES[position];
+
+  // role / aria-live para acessibilidade
+  const isError = type === 'error';
+  const role = isError ? 'alert' : 'status';
+  const ariaLive = isError ? 'assertive' : 'polite';
 
   return (
     <div
-      className={`fixed bottom-4 left-1/2 transform -translate-x-1/2 px-4 py-2 rounded shadow-lg ${typeStyles[type]} transition-opacity duration-300`}
+      role={role}
+      aria-live={ariaLive}
+      className={`fixed z-50 max-w-sm rounded-lg px-4 py-2 text-sm shadow-lg transition-opacity duration-300 ${typeClass} ${positionClass}`}
     >
       {message}
     </div>
   );
-}
-
-// Removed defaultProps as default values are already set in the function parameters
+};
 
 export default Snackbar;
