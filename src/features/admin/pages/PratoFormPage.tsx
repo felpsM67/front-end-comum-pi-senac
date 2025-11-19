@@ -2,18 +2,18 @@
 import React, { useEffect, useState } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 
-import PageLayout from '../../../shared/layout/PageLayout';
-import Snackbar from '../../../shared/feedback/Snackbar';
-import CurrencyField from '../../../shared/form/CurrencyField'; // ajuste o caminho se for diferente
-import PrimaryButton from '../../../shared/ui/PrimaryButton';
-import SecondaryButton from '../../../shared/ui/SecondaryButton';
+import PageLayout from 'shared/layout/PageLayout';
+import Snackbar from 'shared/feedback/Snackbar';
+import CurrencyField from 'shared/form/CurrencyField'; // ajuste o caminho se for diferente
+import PrimaryButton from 'shared/ui/PrimaryButton';
+import SecondaryButton from 'shared/ui/SecondaryButton';
 
-import { useAsyncResource } from '../../../hooks/useAsyncResource';
-import useForm from '../../../hooks/useForm';
-import useSnackbar from '../../../hooks/useSnackbar';
+import { useAsyncResource } from 'hooks/useAsyncResource';
+import useForm from 'hooks/useForm';
+import useSnackbar from 'hooks/useSnackbar';
 
-import api from '../../../http/api';
-import {Prato} from '../../../domain/prato';
+import api from 'http/api';
+import {Prato} from 'domain/prato';
 
 interface PratoFormParams extends Record<string, string | undefined> {
   id?: string;

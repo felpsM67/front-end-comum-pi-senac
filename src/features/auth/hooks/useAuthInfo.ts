@@ -1,6 +1,6 @@
 // src/hooks/useAuthInfo.ts
 import useAuth from './useAuth';
-import type { Role } from '../../../domain/usuario';
+import type { Role } from 'domain/usuario';
 
 export function useAuthInfo() {
   const { usuario, verificarLogin } = useAuth();
@@ -9,9 +9,9 @@ export function useAuthInfo() {
   const role = usuario?.role as Role | undefined;
   const email = usuario?.email ?? null;
 
-  const isGerente = role === 'GERENTE';
-  const isFuncionario = role === 'FUNCIONARIO';
-  const isCliente = role === 'CLIENTE';
+  const isGerente = role?.toUpperCase() === 'GERENTE';
+  const isFuncionario = role?.toUpperCase() === 'FUNCIONARIO';
+  const isCliente = role?.toUpperCase() === 'CLIENTE';
 
   // regras de acesso
   const canAccessAdmin = isGerente || isFuncionario;

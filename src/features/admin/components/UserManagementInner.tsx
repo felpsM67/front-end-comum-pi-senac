@@ -2,16 +2,16 @@
 import React, { useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 
-import Snackbar from '../../../shared/feedback/Snackbar';
-import TabelaJS from '../../../shared/table/TabelaJS';
-import EmptyState from '../../../shared/ui/EmptyState';
-import PrimaryButton from '../../../shared/ui/PrimaryButton';
+import Snackbar from 'shared/feedback/Snackbar';
+import TabelaJS from 'shared/table/TabelaJS';
+import EmptyState from 'shared/ui/EmptyState';
+import PrimaryButton from 'shared/ui/PrimaryButton';
 
-import { useAsyncResource } from '../../../hooks/useAsyncResource';
-import useSnackbar from '../../../hooks/useSnackbar';
-import useTable from '../../../hooks/useTable';
+import { useAsyncResource } from 'hooks/useAsyncResource';
+import useSnackbar from 'hooks/useSnackbar';
+import useTable from 'hooks/useTable';
 
-import api from '../../../http/api';
+import api from 'http/api';
 
 interface User {
   id: number;

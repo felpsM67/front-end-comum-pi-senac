@@ -1,18 +1,23 @@
+// src/app/routes.tsx
 import React from 'react';
 import { Navigate } from 'react-router-dom';
-import ProtectedRoute from '../shared/routing/ProtectedRoute';
-import DetalhesPrato from '../features/menu/pages/DetalhesPrato';
-import FormularioPrato from '../features/admin/pages/PratoFormPage';
-import HomeCliente from '../features/menu/pages/HomeCliente';
-import ShoppingCart from '../features/cart/pages/ShoppingCart';
-import PublicLayout from '../shared/layout/PublicLayout';
-import RestrictedLayout from '../features/admin/layout/RestrictedLayout';
-import Home from '../features/admin/pages/AdminHomePage';
-import Login from '../features/auth/components/Login';
-import OrderManagement from '../features/admin/pages/OrderManagementPage';
-import UserForm from '../features/admin/components/UserForm';
-import UserManagement from '../features/admin/pages/UserManagementPage';
-import OrderForm from '../features/admin/components/orderForm';
+
+
+import PublicLayout from 'shared/layout/PublicLayout';
+import RestrictedLayout from 'features/admin/layout/RestrictedLayout';
+
+import HomeCliente from 'features/menu/pages/HomeCliente';
+import DetalhesPrato from 'features/menu/pages/DetalhesPrato';
+import ShoppingCart from 'features/cart/pages/ShoppingCart';
+
+import AdminLoginPage from 'features/auth/pages/AdminLoginPage';
+import UserForm from 'features/admin/components/UserForm';
+import ClientLoginPage from 'features/auth/pages/ClienteLoginPage';
+import ProtectedRoute from 'shared/routing/ProtectedRoute';
+import Home from 'features/admin/pages/AdminHomePage';
+import FormularioPrato from 'features/admin/pages/PratoFormPage';
+import UserManagementPage from 'features/admin/pages/UserManagementPage';
+import OrderManagementPage from 'features/admin/pages/OrderManagementPage';
 
 export interface RouteConfig {
   path: string;
@@ -20,38 +25,40 @@ export interface RouteConfig {
   children?: RouteConfig[];
 }
 
-const ClienteLogin = () => <div>Cliente Login Page</div>; // Placeholder component
-
 const routes: RouteConfig[] = [
   {
-    path: '/login-admin',
-    element: <Login />,
-  },
-  {
     path: '/login',
-    element: <ClienteLogin />,
+    element: <ClientLoginPage />,
   },
   {
-    path: '/',
-    element: <PublicLayout />,
+    path: '/login-admin',
+    element: <AdminLoginPage />,
+  },
+  // rotas públicas com PublicLayout
+  {
+    path: '',
+    element: (
+      <PublicLayout />
+    ),
     children: [
       {
         path: '',
         element: <HomeCliente />,
       },
       {
-        path: 'detalhes/:id',
+        path: '/detalhes/:id',
         element: <DetalhesPrato />,
       },
       {
-        path: 'carrinho',
+        path: '/carrinho',
         element: <ShoppingCart />,
       },
     ],
   },
+  // rotas admin protegidas
   {
     path: '/admin',
-    element: <ProtectedRoute />,
+    element: <ProtectedRoute />, // já usa useAuthInfo e verifica canAccessAdmin
     children: [
       {
         path: '',
@@ -62,6 +69,10 @@ const routes: RouteConfig[] = [
             element: <Navigate to="home" replace />,
           },
           {
+            path: 'home',
+            element: <Home />,
+          },
+          {
             path: 'novo-prato',
             element: <FormularioPrato />,
           },
@@ -70,12 +81,8 @@ const routes: RouteConfig[] = [
             element: <FormularioPrato />,
           },
           {
-            path: 'home',
-            element: <Home />,
-          },
-          {
             path: 'usuarios',
-            element: <UserManagement />,
+            element: <UserManagementPage />,
           },
           {
             path: 'usuarios/novo',
@@ -87,15 +94,7 @@ const routes: RouteConfig[] = [
           },
           {
             path: 'pedidos',
-            element: <OrderManagement />,
-          },
-          {
-            path: 'pedidos/novo',
-            element: <OrderForm />,
-          },
-          {
-            path: 'pedidos/editar/:id',
-            element: <OrderForm />,
+            element: <OrderManagementPage />,
           },
         ],
       },

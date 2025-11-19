@@ -1,17 +1,17 @@
 import React from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
-import useCart from '../../../hooks/useCart';
+import useCart from 'hooks/useCart';
 
-import { PratoCarrinho } from '../../../context/cartContext';
-import { useAsyncResource } from '../../../hooks/useAsyncResource';
-import useSnackbar from '../../../hooks/useSnackbar';
+import { PratoCarrinho } from 'context/cartContext';
+import { useAsyncResource } from 'hooks/useAsyncResource';
+import useSnackbar from 'hooks/useSnackbar';
 
-import api from '../../../http/api';
+import api from 'http/api';
 
-import PageLayout from '../../../shared/layout/PageLayout';
-import Snackbar from '../../../shared/feedback/Snackbar';
-import PrimaryButton from '../../../shared/ui/PrimaryButton';
-import SecondaryButton from '../../../shared/ui/SecondaryButton';
+import PageLayout from 'shared/layout/PageLayout';
+import Snackbar from 'shared/feedback/Snackbar';
+import PrimaryButton from 'shared/ui/PrimaryButton';
+import SecondaryButton from 'shared/ui/SecondaryButton';
 
 interface Prato {
   id: number;

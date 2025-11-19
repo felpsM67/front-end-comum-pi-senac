@@ -2,7 +2,7 @@ import React from 'react';
 import { NavLink, Outlet } from 'react-router-dom';
 import UserMenu from '../ui/UserMenu';
 import CartIconButton from '../ui/CartIconButton';
-import useCart from '../../hooks/useCart';
+import useCart from 'hooks/useCart';
 
 const PublicLayout: React.FC = () => {
   const { totalItens } = useCart();

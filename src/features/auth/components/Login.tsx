@@ -1,134 +1,149 @@
+// src/features/auth/components/Login.tsx
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import Snackbar from '../../../shared/feedback/Snackbar';
-import FormField from '../../../shared/ui/FormField';
-import PrimaryButton from '../../../shared/ui/PrimaryButton';
-import useForm from '../../../hooks/useForm';
-import { loginAdmin } from '../../../bff/authBff';
 
-interface SnackbarState {
-  message: string;
-  type?: 'success' | 'error' | 'warning' | 'info';
-  duration: number;
+import Snackbar from 'shared/feedback/Snackbar';
+import useForm from 'hooks/useForm';
+import useSnackbar from 'hooks/useSnackbar';
+
+import { loginAdmin, loginCliente } from 'bff/authBff';
+import useAuth from '../hooks/useAuth';
+
+type LoginMode = 'admin' | 'client';
+
+interface LoginProps {
+  mode: LoginMode;
 }
 
-export default function Login() {
+const Login: React.FC<LoginProps> = ({ mode }) => {
   const { values, errors, handleChange, validate } = useForm({
     email: '',
     senha: '',
   });
 
-  const [snackbar, setSnackbar] = useState<SnackbarState>({
-    message: '',
-    type: 'success',
-    duration: 0,
-  });
-
-  const [loading, setLoading] = useState(false);
+  const { snackbar, showError, showSuccess, clearSnackbar } = useSnackbar(5000);
 
   const navigate = useNavigate();
+  const { login } = useAuth(); // <- do AuthContext
 
-  const login = async (e: React.FormEvent) => {
-    e.preventDefault();
+  const [isSubmitting, setIsSubmitting] = useState(false);
 
-    const duration = 5000;
-
+  const handleSubmit = async () => {
     const isValid = validate({
-      email: (value) =>
-        !value
-          ? 'O e-mail é obrigatório.'
-          : !/\S+@\S+\.\S+/.test(String(value))
-            ? 'Informe um e-mail válido.'
-            : null,
-      senha: (value) =>
-        !value || String(value).length < 4
-          ? 'A senha deve ter pelo menos 4 caracteres.'
-          : null,
+      email: (value) => (!value ? 'O email é obrigatório.' : null),
+      senha: (value) => (!value ? 'A senha é obrigatória.' : null),
     });
 
-    if (!isValid) {
-      setSnackbar({
-        message: 'Preencha os campos corretamente antes de continuar.',
-        type: 'warning',
-        duration: 4000,
-      });
-      return;
-    }
+    if (!isValid) return;
 
     try {
-      setLoading(true);
+      setIsSubmitting(true);
 
-      await loginAdmin(values.email, values.senha);
+      const { email, senha } = values;
 
-      setSnackbar({
-        message: 'Sucesso ao logar.',
-        type: 'success',
-        duration,
+      const result =
+        mode === 'admin'
+          ? await loginAdmin(email, senha)
+          : await loginCliente(email, senha);
+
+      // Atualiza o AuthContext
+      login(result.usuario, {
+        token: result.token,
+        refreshToken: result.refreshToken,
       });
+
+      showSuccess(
+        mode === 'admin'
+          ? 'Login de administrador realizado com sucesso.'
+          : 'Login de cliente realizado com sucesso.',
+      );
 
       setTimeout(() => {
-        navigate('/admin/home');
-      }, duration);
+        if (mode === 'admin') {
+          navigate('/admin/home');
+        } else {
+          navigate('/'); // ou "/meus-pedidos"
+        }
+      }, 800);
     } catch (error: unknown) {
-      const axiosError = error as {
-        response?: { data?: { message?: string } };
-      };
-
-      setSnackbar({
-        message:
-          axiosError.response?.data?.message ||
-          'Erro ao realizar login. Verifique seus dados e tente novamente.',
-        type: 'error',
-        duration: 8000,
-      });
+      console.error(error);
+      const msg =
+        error instanceof Error
+          ? error.message
+          : 'Erro ao realizar login. Tente novamente.';
+      showError(msg);
     } finally {
-      setLoading(false);
+      setIsSubmitting(false);
     }
   };
 
   return (
-    <div className="flex min-h-screen items-center justify-center bg-slate-50 px-4">
-      <div className="w-full max-w-md rounded-xl bg-white p-6 shadow-sm sm:p-7">
-        <h2 className="mb-1 text-center text-xl font-semibold text-slate-900 sm:text-2xl">
-          Login
+    <div className="flex min-h-screen flex-col items-center justify-center bg-gray-100 p-4">
+      <div className="w-full max-w-sm rounded-lg bg-white p-6 shadow-lg sm:max-w-md md:max-w-lg lg:max-w-xl">
+        <h2 className="mb-4 text-center text-2xl font-bold">
+          {mode === 'admin' ? 'Login Administrador' : 'Login do Cliente'}
         </h2>
-        <p className="mb-6 text-center text-xs text-slate-500 sm:text-sm">
-          Acesse a área administrativa com seu e-mail e senha.
-        </p>
 
-        <form onSubmit={login} className="space-y-4">
-          <FormField
-            label="E-mail"
-            type="email"
-            placeholder="Digite seu e-mail"
+        <div className="mb-4 w-full">
+          <input
+            type="text"
+            placeholder="Email"
             value={values.email}
             onChange={handleChange('email')}
-            error={errors.email}
+            className={`w-full rounded border p-2 ${
+              errors.email
+                ? 'border-red-500'
+                : values.email
+                  ? 'border-blue-500'
+                  : 'border-gray-300'
+            }`}
           />
+          {errors.email && (
+            <p className="mt-1 text-xs text-red-500">{errors.email}</p>
+          )}
+        </div>
 
-          <FormField
-            label="Senha"
+        <div className="mb-4 w-full">
+          <input
             type="password"
-            placeholder="Digite sua senha"
+            placeholder="Senha"
             value={values.senha}
             onChange={handleChange('senha')}
-            error={errors.senha}
+            className={`w-full rounded border p-2 ${
+              errors.senha
+                ? 'border-red-500'
+                : values.senha
+                  ? 'border-blue-500'
+                  : 'border-gray-300'
+            }`}
           />
+          {errors.senha && (
+            <p className="mt-1 text-xs text-red-500">{errors.senha}</p>
+          )}
+        </div>
 
-          <PrimaryButton type="submit" fullWidth disabled={loading}>
-            {loading ? 'Entrando...' : 'Entrar'}
-          </PrimaryButton>
-        </form>
+        <button
+          type="button"
+          className="w-full rounded bg-blue-500 py-2 text-white hover:bg-blue-600 disabled:cursor-not-allowed disabled:opacity-70"
+          onClick={handleSubmit}
+          disabled={isSubmitting}
+        >
+          {isSubmitting
+            ? mode === 'admin'
+              ? 'Entrando como admin...'
+              : 'Entrando...'
+            : 'Entrar'}
+        </button>
       </div>
 
       <Snackbar
         message={snackbar.message}
         type={snackbar.type}
         duration={snackbar.duration}
-        onClose={() =>
-          setSnackbar({ message: '', type: 'success', duration: 0 })
-        }
+        onClose={clearSnackbar}
       />
     </div>
   );
-}
+};
+
+export default Login;

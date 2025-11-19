@@ -1,6 +1,6 @@
 // src/bff/pratoBff.ts
-import api from '../http/api';
-import {Prato} from '../domain/prato';
+import api from 'http/api';
+import {Prato} from 'domain/prato';
 
 export interface PratoClienteVM {
   id: number;

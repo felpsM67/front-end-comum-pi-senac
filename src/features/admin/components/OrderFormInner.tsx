@@ -2,18 +2,17 @@
 
 import React, { useEffect, useMemo, useState } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
-import CurrencyField from '../../../shared/form/CurrencyField';
-import FormField from '../../../shared/ui/FormField';
-import PhoneField from '../../../shared/form/PhoneField';
-import PrimaryButton from '../../../shared/ui/PrimaryButton';
-import ProductSelect from '../../../shared/ui/ProductSelect';
-import SecondaryButton from '../../../shared/ui/SecondaryButton';
-// import SectionCard from '../components/ui/SectionCard';
+import CurrencyField from 'shared/form/CurrencyField';
+import FormField from 'shared/ui/FormField';
+import PhoneField from 'shared/form/PhoneField';
+import PrimaryButton from 'shared/ui/PrimaryButton';
+import ProductSelect from 'shared/ui/ProductSelect';
+import SecondaryButton from 'shared/ui/SecondaryButton';
 import { AxiosInstance } from 'axios';
-import Snackbar from '../../../shared/feedback/Snackbar';
-import { useIsMounted } from '../../../hooks/useIsMounted';
-import api from '../../../http/api';
-import {Prato} from '../../../domain/prato';
+import Snackbar from 'shared/feedback/Snackbar';
+import { useIsMounted } from 'hooks/useIsMounted';
+import api from 'http/api';
+import {Prato} from 'domain/prato';
 
 interface OrderItemForm {
   produtoId: string;

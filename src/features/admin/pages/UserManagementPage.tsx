@@ -1,5 +1,5 @@
 // src/views/UserManagement.tsx
-import withPageLayout from '../../../hoc/withPageLayout';
+import withPageLayout from 'hoc/withPageLayout';
 import UserManagementInner from '../components/UserManagementInner';
 
 const UserManagement = withPageLayout({

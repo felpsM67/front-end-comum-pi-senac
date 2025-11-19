@@ -1,6 +1,6 @@
 import React, { useEffect, useMemo, useState } from 'react';
 import { FiChevronDown, FiSearch } from 'react-icons/fi';
-import {Prato} from '../../domain/prato';
+import {Prato} from 'domain/prato';
 
 interface ProductSelectProps {
   label?: string;

@@ -8,9 +8,9 @@ import {
   FiUsers,
 } from 'react-icons/fi';
 import { NavLink, Outlet } from 'react-router-dom';
-import { AuthContext } from '../../../context/authContext';
-import UserMenu from '../../../shared/ui/UserMenu';
-import CartIconButton from '../../../shared/ui/CartIconButton';
+import { AuthContext } from 'context/authContext';
+import UserMenu from 'shared/ui/UserMenu';
+import CartIconButton from 'shared/ui/CartIconButton';
 
 export interface MenuItem {
   path: string;

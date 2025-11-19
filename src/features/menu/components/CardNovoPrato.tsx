@@ -1,6 +1,6 @@
 import React from 'react';
 import { Link } from 'react-router-dom';
-import adicionarPrato from '../assets/imagem_adicionar_prato.jpg';
+import adicionarPrato from 'assets/imagem_adicionar_prato.jpg';
 
 const CardNovoPrato = () => {
   return (

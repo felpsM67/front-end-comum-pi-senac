@@ -1,5 +1,5 @@
 // src/views/OrderForm.tsx
-import withPageLayout from '../../../hoc/withPageLayout';
+import withPageLayout from 'hoc/withPageLayout';
 import OrderFormInner from './OrderFormInner';
 
 const OrderForm = withPageLayout({

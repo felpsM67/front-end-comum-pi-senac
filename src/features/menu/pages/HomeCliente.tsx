@@ -1,15 +1,15 @@
 // src/components/HomeCliente.tsx
 import React, { useEffect } from 'react';
 import CardPrato from '../components/CardPrato';
-import PageLayout from '../../../shared/layout/PageLayout';
-import Snackbar from '../../../shared/feedback/Snackbar';
-import EmptyState from '../../../shared/ui/EmptyState';
+import PageLayout from 'shared/layout/PageLayout';
+import Snackbar from 'shared/feedback/Snackbar';
+import EmptyState from 'shared/ui/EmptyState';
 
-import useSnackbar from '../../../hooks/useSnackbar';
-import useTable from '../../../hooks/useTable';
+import useSnackbar from 'hooks/useSnackbar';
+import useTable from 'hooks/useTable';
 
-import { useAsyncResource } from '../../../hooks/useAsyncResource';
-import { fetchPratosCliente, PratoClienteVM } from '../../../bff/pratoBff';
+import { useAsyncResource } from 'hooks/useAsyncResource';
+import { fetchPratosCliente, PratoClienteVM } from 'bff/pratoBff';
 
 const HomeCliente: React.FC = () => {
   // Snackbar para erros da tela

@@ -1,10 +1,10 @@
 import React, { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import TabelaJS from '../../../shared/table/TabelaJS';
-import EmptyState from '../../../shared/ui/EmptyState';
-import LinkButton from '../../../shared/ui/LinkButton';
-import SectionCard from '../../../shared/ui/SectionCard';
-import api from '../../../http/api';
+import TabelaJS from 'shared/table/TabelaJS';
+import EmptyState from 'shared/ui/EmptyState';
+import LinkButton from 'shared/ui/LinkButton';
+import SectionCard from 'shared/ui/SectionCard';
+import api from 'http/api';
 
 export interface Order {
   id: number;

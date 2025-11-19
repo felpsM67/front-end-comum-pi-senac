@@ -1,97 +1,138 @@
+// src/http/api.ts
 import axios, {
+  AxiosError,
   AxiosInstance,
   AxiosResponse,
   InternalAxiosRequestConfig,
 } from 'axios';
 
-// Define a interface para a resposta de erro
-interface ApiError {
-  status: number;
-  message: string;
+interface ApiErrorResponse {
+  message?: string;
+  [key: string]: unknown;
 }
 
-// Cria uma instância do axios
+const API_BASE_URL =
+  process.env.REACT_APP_API_BASE_URL ?? 'http://localhost:3000/api';
+
 const api: AxiosInstance = axios.create({
-  baseURL: process.env.REACT_APP_API_BASE_URL ?? "http://localhost:3000/api", // Substitua pela URL base da sua API
+  baseURL: API_BASE_URL,
   headers: {
     'Content-Type': 'application/json',
   },
 });
 
+const AUTH_TOKEN_KEY = 'token';
+const AUTH_REFRESH_TOKEN_KEY = 'refreshToken';
+const AUTH_LOGIN_PATH = '/login'; // fallback genérico (cliente ou admin decide depois)
+
 // Interceptador de requisição
 api.interceptors.request.use(
   (config: InternalAxiosRequestConfig) => {
-    // Adiciona o token Bearer ao header Authorization
-    const token = localStorage.getItem('token'); // Substitua pela lógica de onde o token está armazenado
+    const token = localStorage.getItem(AUTH_TOKEN_KEY);
     if (token) {
-      config.headers.set('Authorization', `Bearer ${token}`);
+      // Axios normaliza internamente, mas podemos setar com case padrão
+      config.headers.Authorization = `Bearer ${token}`;
     }
     return config;
   },
-  (error) => {
-    // Lida com erros na configuração da requisição
-    return Promise.reject(error);
-  },
+  (error) => Promise.reject(error),
 );
+
+// Helper para fazer refresh com axios “cru” (evita loop de interceptores)
+async function refreshAccessToken(): Promise<string | null> {
+  const refreshToken = localStorage.getItem(AUTH_REFRESH_TOKEN_KEY);
+  if (!refreshToken) return null;
+
+  try {
+    const response = await axios.post<{ token: string }>(
+      `${API_BASE_URL}/refresh-token`,
+      {
+        refreshToken, // 👈 mais comum o back esperar esse nome
+      },
+      {
+        headers: {
+          'Content-Type': 'application/json',
+        },
+      },
+    );
+
+    const newToken = response.data.token;
+    if (newToken) {
+      localStorage.setItem(AUTH_TOKEN_KEY, newToken);
+      return newToken;
+    }
+
+    return null;
+  } catch (error) {
+    console.error('Erro ao tentar renovar token:', error);
+    return null;
+  }
+}
 
 // Interceptador de resposta
 api.interceptors.response.use(
-  (response: AxiosResponse) => {
-    // Retorna a resposta original para manter a tipagem correta
-    return response;
-  },
-  async (error) => {
-    const originalRequest = error.config;
+  (response: AxiosResponse) => response,
+  async (error: AxiosError<ApiErrorResponse>) => {
+    const originalRequest = error.config as InternalAxiosRequestConfig & {
+      _retry?: boolean;
+    };
 
-    if (error.response) {
-      const { status } = error.response;
+    const status = error.response?.status;
 
-      // Caso o status seja 401 e o token tenha sido enviado
-      if (status === 401 && originalRequest.headers.Authorization) {
-        try {
-          // Redireciona para o endpoint de refresh-token
-          const refreshResponse = await api.post<{ token: string }>(
-            '/refresh-token',
-            {
-              token: localStorage.getItem('refreshToken'), // Substitua pela lógica do refresh token
-            },
-          );
+    // Tratamento de 401 com tentativa de refresh
+    if (
+      status === 401 &&
+      !originalRequest._retry // evita loop
+    ) {
+      originalRequest._retry = true;
 
-          // Atualiza o token e refaz a requisição original
-          const newToken = refreshResponse.data.token;
-          localStorage.setItem('token', newToken);
-          originalRequest.headers.Authorization = `Bearer ${newToken}`;
-          return api(originalRequest);
-        } catch (refreshError) {
-          // Caso o refresh falhe, redirecione para login
-          window.location.href = '/login';
-          return Promise.reject(refreshError);
-        }
+      // tenta refresh
+      const newToken = await refreshAccessToken();
+
+      if (newToken) {
+        // atualiza header e tenta novamente a requisição original
+        originalRequest.headers = originalRequest.headers ?? {};
+        originalRequest.headers.Authorization = `Bearer ${newToken}`;
+
+        return api(originalRequest);
       }
 
-      // Caso o status seja 403
-      if (status === 403) {
-        alert('Você não possui acesso a esta tela.');
-        window.history.back(); // Redireciona para a última tela visitada
-        const errorAcessoNegado = new Error('Acesso negado.');
-        (errorAcessoNegado as unknown as ApiError).status = status;
-        return Promise.reject(errorAcessoNegado);
-      }
+      // refresh falhou → limpa storage e redireciona para login
+      localStorage.removeItem(AUTH_TOKEN_KEY);
+      localStorage.removeItem(AUTH_REFRESH_TOKEN_KEY);
 
-      // Para outros erros acima de 399
-      if (status >= 400) {
-        return Promise.reject(
-          new Error(
-            JSON.stringify({
-              status,
-              message: error.response.data?.message || 'Erro desconhecido.',
-            }),
-          ),
-        );
-      }
+      window.location.href = AUTH_LOGIN_PATH;
+      return Promise.reject(error);
     }
 
-    // Lida com erros sem resposta (ex.: problemas de rede)
+    // 403: acesso negado
+    if (status === 403) {
+      alert('Você não possui acesso a esta tela.');
+      window.history.back();
+
+      return Promise.reject(
+        new Error(
+          JSON.stringify({
+            status,
+            message: error.response?.data?.message || 'Acesso negado.',
+          }),
+        ),
+      );
+    }
+
+    // Outros erros >= 400
+    if (status && status >= 400) {
+      return Promise.reject(
+        new Error(
+          JSON.stringify({
+            status,
+            message: error.response?.data?.message || 'Erro desconhecido.',
+          }),
+        ),
+      );
+    }
+
+    // Erros sem resposta (network, CORS, etc.)
     return Promise.reject(
       new Error(
         JSON.stringify({

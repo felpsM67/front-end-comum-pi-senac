@@ -1,11 +1,11 @@
 import React, { JSX, useEffect, useState } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
-import Snackbar from '../../../shared/feedback/Snackbar';
-import { useIsMounted } from '../../../hooks/useIsMounted';
-import api from '../../../http/api';
-import FormField from '../../../shared/ui/FormField';
-import PrimaryButton from '../../../shared/ui/PrimaryButton';
-import SecondaryButton from '../../../shared/ui/SecondaryButton';
+import Snackbar from 'shared/feedback/Snackbar';
+import { useIsMounted } from 'hooks/useIsMounted';
+import api from 'http/api';
+import FormField from 'shared/ui/FormField';
+import PrimaryButton from 'shared/ui/PrimaryButton';
+import SecondaryButton from 'shared/ui/SecondaryButton';
 
 interface SnackbarState {
   message: string;

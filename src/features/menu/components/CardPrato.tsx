@@ -1,11 +1,11 @@
 import React, { FC, useState, useContext } from 'react';
 import { Link } from 'react-router';
-import { CartContext, PratoCarrinho } from '../../../context/cartContext';
-import Snackbar from '../../../shared/feedback/Snackbar';
-import Card from '../../../shared/ui/Card';
-import PrimaryButton from '../../../shared/ui/PrimaryButton';
-import IconButton from '../../../shared/ui/IconButton';
-import Tag from '../../../shared/ui/Tag';
+import { CartContext, PratoCarrinho } from 'context/cartContext';
+import Snackbar from 'shared/feedback/Snackbar';
+import Card from 'shared/ui/Card';
+import PrimaryButton from 'shared/ui/PrimaryButton';
+import IconButton from 'shared/ui/IconButton';
+import Tag from 'shared/ui/Tag';
 
 interface SnackbarState {
   message: string;
