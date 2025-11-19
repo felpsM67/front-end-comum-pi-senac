@@ -1,6 +1,6 @@
 // src/hoc/withPageLayout.tsx
 import React from 'react';
-import PageLayout from '../components/layout/PageLayout';
+import PageLayout from '../shared/layout/PageLayout';
 
 export interface WithPageLayoutOptions {
   title: string;
