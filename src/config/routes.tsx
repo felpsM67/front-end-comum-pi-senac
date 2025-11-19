@@ -5,13 +5,13 @@ import DetalhesPrato from '../components/DetalhesPrato';
 import FormularioPrato from '../components/FormularioPrato';
 import HomeCliente from '../components/HomeCliente';
 import ShoppingCart from '../components/ShoppingCart';
+import PublicLayout from '../components/layout/PublicLayout';
 import RestrictedLayout from '../components/layout/RestrictedLayout';
 import Home from '../views/Home';
 import Login from '../views/Login';
 import OrderManagement from '../views/OrderManagement';
 import UserForm from '../views/UserForm';
 import UserManagement from '../views/UserManagement';
-import PublicLayout from '../components/layout/PublicLayout';
 import OrderForm from '../views/orderForm';
 
 export interface RouteConfig {
@@ -61,7 +61,7 @@ const routes: RouteConfig[] = [
           },
           {
             path: 'detalhes-prato/:id',
-            element: <FormularioPrato isEditing />,
+            element: <FormularioPrato />,
           },
           {
             path: 'home',
@@ -89,7 +89,7 @@ const routes: RouteConfig[] = [
           },
           {
             path: 'pedidos/editar/:id',
-            element: <OrderForm isEditing />,
+            element: <OrderForm />,
           },
         ],
       },

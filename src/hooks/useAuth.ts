@@ -1,19 +1,13 @@
-const useAuth = () => {
-  const token = localStorage.getItem('token');
-  if (!token) return false;
+// src/hooks/useAuth.ts
+import { useContext } from 'react';
+import { AuthContext } from '../context/authContext';
 
-  try {
-    const payload = JSON.parse(atob(token.split('.')[1])); // Decodifica o payload do JWT
-    const isExpired = payload.exp * 1000 < Date.now(); // Verifica se o token expirou
-    if (isExpired) {
-      localStorage.removeItem('token'); // Remove o token expirado
-      return false;
-    }
-    return true;
-  } catch (error: unknown) {
-    console.error('Erro ao decodificar o token:', error);
-    return false; // Token inválido
+const useAuth = () => {
+  const ctx = useContext(AuthContext);
+  if (!ctx) {
+    throw new Error('useAuth deve ser usado dentro de AuthProvider');
   }
+  return ctx;
 };
 
 export default useAuth;

@@ -1,76 +1,119 @@
-/* eslint-disable @typescript-eslint/no-unused-vars */
-import React, { useEffect, useState } from 'react';
-import { useIsMounted } from '../hooks/useIsMounted';
-import api from '../http/api';
-import Prato from '../interface/Prato';
+// src/components/HomeCliente.tsx
+import React, { useEffect } from 'react';
 import CardPrato from './CardPrato';
 import PageLayout from './layout/PageLayout';
+import Snackbar from './Snackbar';
+import EmptyState from './ui/EmptyState';
 
-function HomeCliente() {
-  const isMounted = useIsMounted();
-  const [pratos, setPratos] = useState<Prato[]>([]);
-  const [loading, setLoading] = useState(true);
-  const [erro, setErro] = useState<string | null>(null);
+import api from '../http/api';
+import Prato from '../interface/Prato';
+
+import { useAsyncResource } from '../hooks/useAsyncResource';
+import useSnackbar from '../hooks/useSnackbar';
+import useTable from '../hooks/useTable';
+
+const HomeCliente: React.FC = () => {
+  // Snackbar para erros da tela
+  const { snackbar, showError, clearSnackbar } = useSnackbar(4000);
+
+  // Busca de pratos na API
+  const {
+    data: pratosData,
+    loading,
+    error,
+  } = useAsyncResource<Prato[]>(
+    async () => {
+      const response = await api.get<Prato[]>('/pratos');
+      return response.data ?? [];
+    },
+    { initialData: [] },
+  );
+
+  // Filtro/busca no cardápio
+  const {
+    filteredData: pratos,
+    searchTerm,
+    handleSearch,
+  } = useTable<Prato>(pratosData || [], (prato, term) => {
+    const search = term.toLowerCase();
+    return (
+      prato.nome.toLowerCase().includes(search) ||
+      prato.cozinha.toLowerCase().includes(search) ||
+      prato.descricao_resumida.toLowerCase().includes(search)
+    );
+  });
 
   useEffect(() => {
-    const fetchPratos = async () => {
-      try {
-        setLoading(true);
-        setErro(null);
-
-        const response = await api.get<Prato[]>('/pratos');
-
-        setPratos(response.data);
-      } catch (error) {
-        setErro('Não foi possível carregar os pratos. Tente novamente.');
-      } finally {
-        setLoading(false);
-      }
-    };
-
-    if (isMounted()) {
-      fetchPratos();
+    if (error) {
+      showError('Erro ao carregar os pratos. Tente novamente mais tarde.');
     }
-  }, [isMounted]);
+  }, [error, showError]);
+
+  const hasPratos = (pratos || []).length > 0;
 
   return (
     <PageLayout
-      title="Pratos disponíveis"
-      subtitle="Escolha um prato e adicione ao seu carrinho."
+      title="Cardápio"
+      subtitle="Escolha seu prato favorito e adicione ao carrinho."
     >
+      {/* Campo de busca (opcional mas ajuda muito na UX) */}
+      <div className="mb-4 flex justify-center">
+        <input
+          type="text"
+          placeholder="Buscar por nome, cozinha ou descrição..."
+          value={searchTerm}
+          onChange={(e) => handleSearch(e.target.value)}
+          className="w-full max-w-xl rounded-lg border border-slate-300 px-3 py-2 text-sm shadow-sm outline-none transition focus:border-emerald-500 focus:ring-1 focus:ring-emerald-100"
+        />
+      </div>
+
+      {/* Conteúdo principal */}
       {loading ? (
-        <section className="mt-4 space-y-4">
-          <div className="h-4 w-40 rounded bg-slate-200" />
-          <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
-            {Array.from({ length: 6 }).map((_, index) => (
-              <div key={index} className="h-40 rounded-xl bg-slate-200" />
-            ))}
-          </div>
+        // Skeleton
+        <section className="mt-4 grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+          <div className="h-64 w-full animate-pulse rounded-xl bg-slate-200" />
+          <div className="h-64 w-full animate-pulse rounded-xl bg-slate-200" />
+          <div className="h-64 w-full animate-pulse rounded-xl bg-slate-200" />
         </section>
-      ) : erro ? (
-        <section className="mt-6 rounded-xl border border-red-100 bg-red-50 px-4 py-3 text-sm text-red-700">
-          {erro}
-        </section>
-      ) : pratos.length === 0 ? (
-        <section className="mt-10 flex flex-1 flex-col items-center justify-center text-center">
-          <p className="text-sm font-medium text-slate-700">
-            Nenhum prato disponível no momento.
-          </p>
-          <p className="mt-1 text-xs text-slate-500">
-            Volte mais tarde para conferir novas opções.
-          </p>
+      ) : !hasPratos ? (
+        // Estado vazio
+        <section className="mt-6">
+          <EmptyState
+            title="Nenhum prato disponível no momento"
+            description={
+              (pratosData || []).length > 0
+                ? 'Sua busca não encontrou resultados. Tente outro termo.'
+                : 'O cardápio ainda está sendo montado. Volte em alguns instantes.'
+            }
+          />
         </section>
       ) : (
-        <section className="mt-4 flex-1">
-          <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
+        // Grid de pratos
+        <section className="mt-4">
+          <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
             {pratos.map((prato) => (
-              <CardPrato key={prato.id ?? prato.nome} {...prato} />
+              <CardPrato
+                key={prato.id}
+                id={prato.id}
+                nome={prato.nome}
+                cozinha={prato.cozinha}
+                descricao_resumida={prato.descricao_resumida}
+                imagem={prato.imagem}
+                valor={prato.valor}
+              />
             ))}
           </div>
         </section>
       )}
+
+      <Snackbar
+        message={snackbar.message}
+        type={snackbar.type}
+        duration={snackbar.duration}
+        onClose={clearSnackbar}
+      />
     </PageLayout>
   );
-}
+};
 
 export default HomeCliente;

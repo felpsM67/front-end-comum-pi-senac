@@ -1,8 +1,14 @@
-import React, { useEffect, useState } from 'react';
+import React from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
-import { useIsMounted } from '../hooks/useIsMounted';
+
+import { CartContext, PratoCarrinho } from '../context/cartContext';
+import { useAsyncResource } from '../hooks/useAsyncResource';
+import useSnackbar from '../hooks/useSnackbar';
+
 import api from '../http/api';
+
 import PageLayout from './layout/PageLayout';
+import Snackbar from './Snackbar';
 import PrimaryButton from './ui/PrimaryButton';
 import SecondaryButton from './ui/SecondaryButton';
 
@@ -16,48 +22,69 @@ interface Prato {
 }
 
 const DetalhesPrato: React.FC = () => {
-  const isMounted = useIsMounted();
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
 
-  const [prato, setPrato] = useState<Prato | null>(null);
-  const [loading, setLoading] = useState(true);
-  const [erro, setErro] = useState<string | null>(null);
-
-  async function fetchPratoDetails(pratoId: string): Promise<Prato> {
-    const response = await api.get<Prato>(`/pratos/${pratoId}`);
-    return response.data;
+  const cartContext = React.useContext(CartContext);
+  if (!cartContext) {
+    throw new Error('CartContext não está disponível');
   }
 
-  useEffect(() => {
-    const fetchPrato = async () => {
-      try {
-        if (!id) return;
+  const { pratos: pratosNoCarrinho, adicionarPrato } = cartContext;
 
-        setLoading(true);
-        setErro(null);
+  const { snackbar, showSuccess, showError, clearSnackbar } = useSnackbar(4000);
 
-        const response = await fetchPratoDetails(id);
-
-        setPrato(response);
-      } catch (error) {
-        console.error('Erro ao buscar os detalhes do prato:', error);
-        setErro('Não foi possível carregar os detalhes do prato.');
-      } finally {
-        setLoading(false);
-      }
-    };
-
-    if (id && isMounted()) {
-      fetchPrato();
-    }
-  }, [id, isMounted]);
+  // Carrega os detalhes do prato com useAsyncResource
+  const {
+    data: prato,
+    loading,
+    error,
+  } = useAsyncResource<Prato | null>(
+    async () => {
+      if (!id) return null;
+      const response = await api.get<Prato>(`/pratos/${id}`);
+      return response.data;
+    },
+    {
+      initialData: null,
+      immediate: Boolean(id),
+    },
+  );
 
   const handleAddToCart = () => {
     if (!prato) return;
-    // Aqui ainda está simples com alert; depois podemos plugar no CartContext + Snackbar
-    alert(`Prato "${prato.nome}" foi adicionado ao carrinho!`);
+
+    try {
+      const pratoExistente = pratosNoCarrinho?.find((p) => p.id === prato.id);
+
+      let quantidade = 1;
+      let pratoParaAdicionar: PratoCarrinho;
+
+      if (pratoExistente) {
+        pratoExistente.quantidade += 1;
+        quantidade = pratoExistente.quantidade;
+        pratoParaAdicionar = pratoExistente;
+      } else {
+        pratoParaAdicionar = {
+          id: prato.id,
+          nome: prato.nome,
+          valor: prato.valor,
+          quantidade: 1,
+        } as PratoCarrinho;
+      }
+
+      adicionarPrato(pratoParaAdicionar);
+
+      showSuccess(
+        `Prato "${prato.nome}" foi adicionado ao carrinho! Quantidade: ${quantidade}`,
+      );
+    } catch (err) {
+      console.error('Erro ao adicionar prato ao carrinho:', err);
+      showError('Não foi possível adicionar o prato ao carrinho.');
+    }
   };
+
+  const temErroCarregamento = Boolean(error);
 
   return (
     <PageLayout
@@ -65,18 +92,23 @@ const DetalhesPrato: React.FC = () => {
       subtitle="Veja mais informações sobre sua escolha antes de adicioná-la ao carrinho."
     >
       {loading ? (
+        // Skeleton de carregamento
         <section className="mt-4 flex justify-center">
           <div className="h-64 w-full max-w-3xl animate-pulse rounded-xl bg-slate-200" />
         </section>
-      ) : erro ? (
+      ) : temErroCarregamento ? (
+        // Erro de carregamento
         <section className="mt-6 rounded-xl border border-red-100 bg-red-50 px-4 py-3 text-sm text-red-700">
-          {erro}
+          Não foi possível carregar os detalhes do prato. Tente novamente mais
+          tarde.
         </section>
       ) : !prato ? (
+        // Sem prato encontrado
         <section className="mt-6 text-center text-sm text-slate-600">
           Não encontramos detalhes para esse prato.
         </section>
       ) : (
+        // Conteúdo normal
         <section className="mt-4 flex justify-center">
           <div className="flex w-full max-w-3xl flex-col overflow-hidden rounded-xl border border-slate-100 bg-white shadow-sm">
             {/* Imagem + infos principais */}
@@ -139,6 +171,13 @@ const DetalhesPrato: React.FC = () => {
           </div>
         </section>
       )}
+
+      <Snackbar
+        message={snackbar.message}
+        type={snackbar.type}
+        duration={snackbar.duration}
+        onClose={clearSnackbar}
+      />
     </PageLayout>
   );
 };

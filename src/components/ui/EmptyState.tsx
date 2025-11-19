@@ -1,33 +1,35 @@
-import React, { ReactNode } from 'react';
+import React from 'react';
 
-interface EmptyStateProps {
+export interface EmptyStateProps {
   title: string;
   description?: string;
-  icon?: ReactNode;
-  actions?: ReactNode;
+  actionLabel?: string;
+  onAction?: () => void;
+  icon?: React.ReactNode;
   className?: string;
+
+  // ✅ novo: permite passar botões customizados
+  actions?: React.ReactNode;
 }
 
 const EmptyState: React.FC<EmptyStateProps> = ({
   title,
   description,
+  actionLabel,
+  onAction,
   icon,
-  actions,
   className = '',
+  actions,
 }) => {
   return (
     <div
-      className={`flex flex-col items-center justify-center py-10 text-center ${className}`}
+      className={`flex flex-col items-center justify-center rounded-lg border border-dashed border-slate-200 bg-slate-50 px-4 py-8 text-center ${className}`}
     >
-      {icon && (
-        <div className="mb-3 flex h-12 w-12 items-center justify-center rounded-full bg-slate-100 text-2xl text-slate-500">
-          {icon}
-        </div>
-      )}
+      {icon && <div className="mb-3 text-2xl text-slate-400">{icon}</div>}
 
-      <p className="text-sm font-medium text-slate-800 sm:text-base">
+      <h3 className="text-sm font-semibold text-slate-900 sm:text-base">
         {title}
-      </p>
+      </h3>
 
       {description && (
         <p className="mt-1 max-w-md text-xs text-slate-500 sm:text-sm">
@@ -35,10 +37,22 @@ const EmptyState: React.FC<EmptyStateProps> = ({
         </p>
       )}
 
-      {actions && (
-        <div className="mt-4 flex flex-wrap items-center justify-center gap-2">
+      {/* ✅ se existir `actions`, usamos ele; senão caímos no botão padrão */}
+      {actions ? (
+        <div className="mt-4 flex flex-wrap justify-center gap-2">
           {actions}
         </div>
+      ) : (
+        actionLabel &&
+        onAction && (
+          <button
+            type="button"
+            onClick={onAction}
+            className="mt-4 rounded-lg border border-emerald-300 bg-emerald-50 px-3 py-1.5 text-xs font-semibold text-emerald-700 transition hover:bg-emerald-100"
+          >
+            {actionLabel}
+          </button>
+        )
       )}
     </div>
   );

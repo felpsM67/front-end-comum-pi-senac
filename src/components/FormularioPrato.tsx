@@ -1,91 +1,91 @@
+// src/components/FormularioPrato.tsx
 import React, { useEffect, useState } from 'react';
-import { useParams } from 'react-router';
+import { useNavigate, useParams } from 'react-router-dom';
+
+import PageLayout from './layout/PageLayout';
+import Snackbar from './Snackbar';
+import CurrencyField from './ui/CurrencyField'; // ajuste o caminho se for diferente
+import PrimaryButton from './ui/PrimaryButton';
+import SecondaryButton from './ui/SecondaryButton';
+
+import { useAsyncResource } from '../hooks/useAsyncResource';
 import useForm from '../hooks/useForm';
+import useSnackbar from '../hooks/useSnackbar';
+
 import api from '../http/api';
 import Prato from '../interface/Prato';
-import Snackbar from './Snackbar';
-import PageLayout from './layout/PageLayout';
-import FormField from './ui/FormField';
-import PrimaryButton from './ui/PrimaryButton';
-import TextAreaField from './ui/TextAreaField';
-
-export interface PratoFormProps {
-  isEditing?: boolean; // Indica se o formulário está no modo de edição
-}
 
 interface PratoFormParams extends Record<string, string | undefined> {
   id?: string;
 }
 
-interface SnackbarState {
-  message: string;
-  type: 'success' | 'error' | 'warning' | 'info';
-  duration: number;
-}
+type PratoFormValues = {
+  nome: string;
+  cozinha: string;
+  descricao_resumida: string;
+  descricao_detalhada: string;
+  imagem: string;
+  valor: number | null; // ⬅️ antes era string
+};
 
-const FormularioPrato: React.FC<PratoFormProps> = ({ isEditing = false }) => {
-  const [snackbar, setSnackbar] = useState<SnackbarState>({
-    message: '',
-    type: 'success',
-    duration: 0,
-  });
+const defaultPratoValues: PratoFormValues = {
+  nome: '',
+  cozinha: '',
+  descricao_resumida: '',
+  descricao_detalhada: '',
+  imagem: '',
+  valor: null, // ⬅️ antes era ''
+};
 
-  const [loadingPrato, setLoadingPrato] = useState(false);
-  const [submitting, setSubmitting] = useState(false);
+const FormularioPrato: React.FC = () => {
+  const navigate = useNavigate();
+  const { id } = useParams<PratoFormParams>();
+  const isEditing = Boolean(id);
 
-  const defaultPratoValues = {
-    nome: '',
-    cozinha: '',
-    descricao_resumida: '',
-    descricao_detalhada: '',
-    imagem: '',
-    valor: 0,
-  };
+  const { snackbar, showSuccess, showError, clearSnackbar } = useSnackbar(5000);
 
   const { values, errors, handleChange, validate, updateValues } =
-    useForm(defaultPratoValues);
+    useForm<PratoFormValues>(defaultPratoValues);
 
-  const { id } = useParams<PratoFormParams>();
+  const [isSubmitting, setIsSubmitting] = useState(false);
 
+  // Carrega prato para edição (quando tem id)
+  const {
+    data: pratoCarregado,
+    loading: loadingPrato,
+    error: errorPrato,
+  } = useAsyncResource<Prato | null>(
+    async () => {
+      if (!id) return null;
+      const response = await api.get<Prato>(`/pratos/${id}`);
+      return response.data;
+    },
+    {
+      initialData: null,
+      immediate: isEditing,
+    },
+  );
+
+  // Quando tiver prato carregado, sincroniza com o formulário
   useEffect(() => {
-    if (isEditing && id) {
-      const fetchPrato = async () => {
-        try {
-          setLoadingPrato(true);
-
-          const response = await api.get<Prato>(`/pratos/${id}`);
-
-          const {
-            nome,
-            cozinha,
-            descricao_detalhada,
-            descricao_resumida,
-            imagem,
-            valor,
-          } = response.data;
-
-          updateValues({
-            nome,
-            cozinha,
-            descricao_detalhada,
-            descricao_resumida,
-            imagem,
-            valor,
-          });
-        } catch {
-          setSnackbar({
-            message: 'Erro ao carregar os dados do prato.',
-            type: 'error',
-            duration: 10000,
-          });
-        } finally {
-          setLoadingPrato(false);
-        }
-      };
-
-      fetchPrato();
+    if (pratoCarregado) {
+      updateValues({
+        nome: pratoCarregado.nome,
+        cozinha: pratoCarregado.cozinha,
+        descricao_resumida: pratoCarregado.descricao_resumida,
+        descricao_detalhada: pratoCarregado.descricao_detalhada,
+        imagem: pratoCarregado.imagem,
+        valor: pratoCarregado.valor, // ⬅️ agora é number direto
+      });
     }
-  }, [id, isEditing, updateValues]);
+  }, [pratoCarregado, updateValues]);
+
+  // Erro ao carregar prato (edição)
+  useEffect(() => {
+    if (errorPrato && isEditing) {
+      showError('Erro ao carregar os dados do prato para edição.');
+    }
+  }, [errorPrato, isEditing, showError]);
 
   const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
@@ -97,143 +97,240 @@ const FormularioPrato: React.FC<PratoFormProps> = ({ isEditing = false }) => {
         !value ? 'A descrição resumida é obrigatória.' : null,
       descricao_detalhada: (value) =>
         !value ? 'A descrição detalhada é obrigatória.' : null,
-      valor: (value) =>
-        !value || isNaN(Number(value))
-          ? 'O valor deve ser um número válido.'
-          : null,
+      valor: (value) => {
+        const num =
+          typeof value === 'number' ? value : Number(value as unknown);
+
+        if (!num || Number.isNaN(num) || num <= 0) {
+          return 'O valor deve ser um número válido.';
+        }
+
+        return null;
+      },
       imagem: () => null,
     });
 
     if (!isValid) return;
 
     try {
-      setSubmitting(true);
+      setIsSubmitting(true);
+
+      const valorNormalizado =
+        typeof values.valor === 'number' ? values.valor : 0;
+      // ou só usar direto se validação já garante
+
+      const payload = {
+        nome: values.nome,
+        cozinha: values.cozinha,
+        descricao_resumida: values.descricao_resumida,
+        descricao_detalhada: values.descricao_detalhada,
+        imagem: values.imagem,
+        valor: valorNormalizado,
+      };
 
       if (isEditing && id) {
-        await api.put<Prato>(`/pratos/${id}`, values);
-        setSnackbar({
-          message: 'Prato atualizado com sucesso!',
-          type: 'success',
-          duration: 10000,
-        });
+        await api.put<Prato>(`/pratos/${id}`, payload);
+        showSuccess('Prato atualizado com sucesso!');
       } else {
-        await api.post<Prato[]>('/pratos', values);
-        setSnackbar({
-          message: 'Prato cadastrado com sucesso!',
-          type: 'success',
-          duration: 10000,
-        });
+        await api.post<Prato>('/pratos', payload);
+        showSuccess('Prato cadastrado com sucesso!');
         updateValues(defaultPratoValues);
       }
+
+      // Depois de salvar, volta para a lista (home admin)
+      navigate('/admin/home');
     } catch (error) {
       console.error('Erro ao salvar o prato:', error);
-      setSnackbar({
-        message: 'Erro ao salvar o prato. Tente novamente.',
-        type: 'error',
-        duration: 10000,
-      });
+      showError('Erro ao salvar o prato. Tente novamente.');
     } finally {
-      setSubmitting(false);
+      setIsSubmitting(false);
     }
   };
 
-  const pageTitle = isEditing ? 'Editar prato' : 'Cadastrar novo prato';
-  const pageSubtitle = isEditing
-    ? 'Atualize as informações do prato cadastrado.'
-    : 'Preencha as informações para cadastrar um novo prato no cardápio.';
+  const isLoading = isEditing && loadingPrato;
 
   return (
-    <PageLayout title={pageTitle} subtitle={pageSubtitle}>
-      <section className="mt-4 flex justify-center">
-        <form
-          onSubmit={handleSubmit}
-          className="w-full max-w-lg space-y-4 rounded-xl bg-white p-6 shadow-sm"
-        >
-          {loadingPrato && isEditing && (
-            <div className="mb-2 h-8 w-full animate-pulse rounded bg-slate-100" />
-          )}
-
-          <FormField
-            label="Imagem do prato"
-            name="imagem"
-            type="text"
-            placeholder="Cole a URL da imagem do prato"
-            value={values.imagem}
-            onChange={handleChange('imagem')}
-            error={errors.imagem}
-          />
-
-          <FormField
-            label="Nome do prato"
-            name="nome"
-            type="text"
-            placeholder="Digite o nome do prato"
-            value={values.nome}
-            onChange={handleChange('nome')}
-            error={errors.nome}
-          />
-
-          <FormField
-            label="Cozinha"
-            name="cozinha"
-            type="text"
-            placeholder="Digite o tipo de cozinha"
-            value={values.cozinha}
-            onChange={handleChange('cozinha')}
-            error={errors.cozinha}
-          />
-
-          <FormField
-            label="Descrição resumida"
-            name="descricao_resumida"
-            type="text"
-            placeholder="Digite a descrição resumida do prato"
-            value={values.descricao_resumida}
-            onChange={handleChange('descricao_resumida')}
-            error={errors.descricao_resumida}
-          />
-
-          <TextAreaField
-            label="Descrição detalhada"
-            name="descricao_detalhada"
-            placeholder="Digite a descrição detalhada do prato"
-            value={values.descricao_detalhada}
-            onChange={handleChange('descricao_detalhada')}
-            error={errors.descricao_detalhada}
-            rows={4}
-          />
-
-          <FormField
-            label="Valor do prato"
-            name="valor"
-            type="text"
-            placeholder="Digite o valor do prato"
-            value={values.valor}
-            onChange={handleChange('valor')}
-            error={errors.valor}
-          />
-
-          <PrimaryButton
-            type="submit"
-            fullWidth
-            disabled={submitting || (loadingPrato && isEditing)}
+    <PageLayout
+      title={isEditing ? 'Editar prato' : 'Cadastrar novo prato'}
+      subtitle={
+        isEditing
+          ? 'Atualize as informações do prato já cadastrado.'
+          : 'Preencha os campos abaixo para cadastrar um novo prato no cardápio.'
+      }
+    >
+      {isLoading ? (
+        <section className="mt-4 flex justify-center">
+          <div className="h-64 w-full max-w-xl animate-pulse rounded-xl bg-slate-200" />
+        </section>
+      ) : (
+        <section className="mt-4 flex justify-center">
+          <form
+            onSubmit={handleSubmit}
+            className="w-full max-w-xl rounded-xl border border-slate-200 bg-white p-4 shadow-sm sm:p-6"
           >
-            {submitting
-              ? isEditing
-                ? 'Salvando alterações...'
-                : 'Cadastrando prato...'
-              : isEditing
-                ? 'Salvar alterações'
-                : 'Cadastrar prato'}
-          </PrimaryButton>
-        </form>
-      </section>
+            {/* Imagem */}
+            <div className="mb-4">
+              <label className="mb-1 block text-sm font-medium text-slate-700">
+                Imagem do prato
+              </label>
+              <input
+                type="text"
+                name="imagem"
+                value={values.imagem}
+                onChange={handleChange('imagem')}
+                placeholder="Cole a URL da imagem do prato"
+                className={`w-full rounded-lg border px-3 py-2 text-sm shadow-sm outline-none transition ${
+                  errors.imagem
+                    ? 'border-red-500 focus:border-red-500 focus:ring-1 focus:ring-red-100'
+                    : 'border-slate-300 focus:border-emerald-500 focus:ring-1 focus:ring-emerald-100'
+                }`}
+              />
+              {errors.imagem && (
+                <p className="mt-1 text-xs text-red-500">{errors.imagem}</p>
+              )}
+            </div>
+
+            {/* Nome */}
+            <div className="mb-4">
+              <label className="mb-1 block text-sm font-medium text-slate-700">
+                Nome do prato
+              </label>
+              <input
+                type="text"
+                name="nome"
+                value={values.nome}
+                onChange={handleChange('nome')}
+                placeholder="Digite o nome do prato"
+                className={`w-full rounded-lg border px-3 py-2 text-sm shadow-sm outline-none transition ${
+                  errors.nome
+                    ? 'border-red-500 focus:border-red-500 focus:ring-1 focus:ring-red-100'
+                    : 'border-slate-300 focus:border-emerald-500 focus:ring-1 focus:ring-emerald-100'
+                }`}
+              />
+              {errors.nome && (
+                <p className="mt-1 text-xs text-red-500">{errors.nome}</p>
+              )}
+            </div>
+
+            {/* Cozinha */}
+            <div className="mb-4">
+              <label className="mb-1 block text-sm font-medium text-slate-700">
+                Cozinha
+              </label>
+              <input
+                type="text"
+                name="cozinha"
+                value={values.cozinha}
+                onChange={handleChange('cozinha')}
+                placeholder="Ex.: Brasileira, Italiana, Japonesa..."
+                className={`w-full rounded-lg border px-3 py-2 text-sm shadow-sm outline-none transition ${
+                  errors.cozinha
+                    ? 'border-red-500 focus:border-red-500 focus:ring-1 focus:ring-red-100'
+                    : 'border-slate-300 focus:border-emerald-500 focus:ring-1 focus:ring-emerald-100'
+                }`}
+              />
+              {errors.cozinha && (
+                <p className="mt-1 text-xs text-red-500">{errors.cozinha}</p>
+              )}
+            </div>
+
+            {/* Descrição resumida */}
+            <div className="mb-4">
+              <label className="mb-1 block text-sm font-medium text-slate-700">
+                Descrição resumida
+              </label>
+              <input
+                type="text"
+                name="descricao_resumida"
+                value={values.descricao_resumida}
+                onChange={handleChange('descricao_resumida')}
+                placeholder="Resumo curto do prato"
+                className={`w-full rounded-lg border px-3 py-2 text-sm shadow-sm outline-none transition ${
+                  errors.descricao_resumida
+                    ? 'border-red-500 focus:border-red-500 focus:ring-1 focus:ring-red-100'
+                    : 'border-slate-300 focus:border-emerald-500 focus:ring-1 focus:ring-emerald-100'
+                }`}
+              />
+              {errors.descricao_resumida && (
+                <p className="mt-1 text-xs text-red-500">
+                  {errors.descricao_resumida}
+                </p>
+              )}
+            </div>
+
+            {/* Descrição detalhada */}
+            <div className="mb-4">
+              <label className="mb-1 block text-sm font-medium text-slate-700">
+                Descrição detalhada
+              </label>
+              <textarea
+                name="descricao_detalhada"
+                value={values.descricao_detalhada}
+                onChange={handleChange('descricao_detalhada')}
+                placeholder="Descrição detalhada da experiência gastronômica"
+                rows={4}
+                className={`w-full rounded-lg border px-3 py-2 text-sm shadow-sm outline-none transition ${
+                  errors.descricao_detalhada
+                    ? 'border-red-500 focus:border-red-500 focus:ring-1 focus:ring-red-100'
+                    : 'border-slate-300 focus:border-emerald-500 focus:ring-1 focus:ring-emerald-100'
+                }`}
+              />
+              {errors.descricao_detalhada && (
+                <p className="mt-1 text-xs text-red-500">
+                  {errors.descricao_detalhada}
+                </p>
+              )}
+            </div>
+
+            {/* Valor */}
+            <div className="mb-4">
+              <CurrencyField
+                label="Valor do prato"
+                value={values.valor}
+                onChange={(valor) =>
+                  updateValues({
+                    ...values,
+                    valor,
+                  })
+                }
+                error={errors.valor}
+                required
+              />
+            </div>
+
+            {/* Ações */}
+            <div className="mt-6 flex flex-col gap-3 sm:flex-row sm:justify-between">
+              <SecondaryButton
+                type="button"
+                onClick={() => navigate('/admin/home')}
+                className="sm:w-auto"
+              >
+                Cancelar
+              </SecondaryButton>
+
+              <PrimaryButton
+                type="submit"
+                disabled={isSubmitting}
+                className="sm:w-auto"
+              >
+                {isSubmitting
+                  ? isEditing
+                    ? 'Salvando...'
+                    : 'Cadastrando...'
+                  : isEditing
+                    ? 'Salvar alterações'
+                    : 'Cadastrar prato'}
+              </PrimaryButton>
+            </div>
+          </form>
+        </section>
+      )}
 
       <Snackbar
         message={snackbar.message}
         type={snackbar.type}
         duration={snackbar.duration}
-        onClose={() => setSnackbar({ message: '', type: 'info', duration: 0 })}
+        onClose={clearSnackbar}
       />
     </PageLayout>
   );

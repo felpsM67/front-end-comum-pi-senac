@@ -1,15 +1,21 @@
-import React, { useContext, useState } from 'react';
-import { useNavigate } from 'react-router';
-import CheckoutLayout from '../components/layout/CheckoutLayout';
-import FormField from '../components/ui/FormField';
-import QuantityInput from '../components/ui/QuantityInput';
-import SectionCard from '../components/ui/SectionCard';
-import TextAreaField from '../components/ui/TextAreaField';
+// src/components/ShoppingCart.tsx
+import React, { useState } from 'react';
+import { useNavigate } from 'react-router-dom';
+
 import { CartContext } from '../context/cartContext';
-import PhoneField from '../components/ui/PhoneField';
+
+import PageLayout from './layout/PageLayout';
+import Snackbar from './Snackbar';
+import EmptyState from './ui/EmptyState';
+import PhoneField from './ui/PhoneField'; // ajuste o caminho se estiver diferente
+import PrimaryButton from './ui/PrimaryButton';
+import SecondaryButton from './ui/SecondaryButton';
+
+import useSnackbar from '../hooks/useSnackbar';
 
 const ShoppingCart: React.FC = () => {
-  const cartContext = useContext(CartContext);
+  const cartContext = React.useContext(CartContext);
+  const navigate = useNavigate();
 
   if (!cartContext) {
     throw new Error('CartContext não está disponível');
@@ -17,89 +23,147 @@ const ShoppingCart: React.FC = () => {
 
   const { pratos, totalCompra, removerPrato, adicionarPrato } = cartContext;
 
-  const navigate = useNavigate();
   const [address, setAddress] = useState<string>('');
   const [paymentInfo, setPaymentInfo] = useState<string>('');
-  const [phone, setPhone] = useState<string>('');
+  const [phone, setPhone] = useState<string>(''); // armazenando só dígitos
 
-  const updateQuantity = (id: number, quantity: number) => {
+  const { snackbar, showError, showSuccess, clearSnackbar } = useSnackbar(4000);
+
+  const handleQuantityChange = (id: number, quantity: number) => {
     if (quantity > 0) {
-      const pratoExistente = pratos?.find((prato) => prato.id === id);
-      if (!pratoExistente) return;
+      const pratoExists = pratos?.find((prato) => prato.id === id);
+      if (!pratoExists) return;
 
-      const pratoAtualizado = {
-        ...pratoExistente,
-        quantidade: quantity,
-      };
-
-      adicionarPrato(pratoAtualizado);
+      const updated = { ...pratoExists, quantidade: quantity };
+      adicionarPrato(updated);
       return;
     }
 
     removerPrato(id);
   };
 
-  const handleQuantityChange = (id: number, quantity: number) => {
-    if (Number.isNaN(quantity)) return;
-    updateQuantity(id, quantity);
-  };
-
   const handleConfirmOrder = () => {
-    if (!pratos?.length) {
-      alert('Seu carrinho está vazio.');
+    if (!pratos || pratos.length === 0) {
+      showError(
+        'Seu carrinho está vazio. Adicione algum prato antes de confirmar.',
+      );
       return;
     }
 
-    if (!phone || !address) {
-      alert('Por favor, preencha telefone e endereço de entrega.');
+    if (!phone || phone.length < 10) {
+      showError('Informe um telefone válido para contato.');
       return;
     }
 
-    alert('Pedido confirmado!');
+    if (!address.trim()) {
+      showError('Informe o endereço de entrega.');
+      return;
+    }
+
+    if (!paymentInfo.trim()) {
+      showError('Informe os dados de pagamento.');
+      return;
+    }
+
+    // aqui no futuro: chamada para API de criação de pedido
+    console.log('Confirmando pedido com dados:', {
+      phone,
+      address,
+      paymentInfo,
+      itens: pratos,
+      total: totalCompra,
+    });
+
+    showSuccess('Pedido confirmado com sucesso!');
+
+    // futuramente: navegar para tela de resumo / acompanhamento
+    // navigate('/pedido/confirmado');
   };
+
+  const hasItems = pratos && pratos.length > 0;
 
   return (
-    <CheckoutLayout
-      title="Finalizar pedido"
-      subtitle="Revise seu carrinho e informe os dados para entrega."
-      onBack={() => navigate(-1)}
+    <PageLayout
+      title="Carrinho de compras"
+      subtitle="Revise seus itens e informe seus dados de entrega e pagamento."
     >
-      <div className="flex flex-col gap-4 lg:flex-row">
-        {/* Coluna esquerda: dados do cliente + pagamento */}
-        <SectionCard
-          title="Dados do cliente"
-          subtitle="Informe seus dados para entrega e contato."
-          className="flex-1"
-        >
-          <div className="space-y-4">
-            <PhoneField
-              label="Telefone Celular"
-              name="clienteTelefone"
-              value={phone}
-              onChange={setPhone}
-              helperText="Usaremos este número para contato sobre o pedido."
-            />
+      {!hasItems ? (
+        <section className="mt-4">
+          <EmptyState
+            title="Seu carrinho está vazio"
+            description="Você ainda não adicionou nenhum prato. Volte ao cardápio para escolher suas opções favoritas."
+            actions={
+              <SecondaryButton
+                type="button"
+                onClick={() => navigate('/')}
+                className="mt-2"
+              >
+                Voltar ao cardápio
+              </SecondaryButton>
+            }
+          />
+        </section>
+      ) : (
+        <section className="mt-4 flex flex-col gap-6 lg:flex-row">
+          {/* Dados do cliente e pagamento */}
+          <div className="flex-1 rounded-lg border border-slate-200 bg-white p-4 shadow-sm sm:p-6">
+            <div className="mb-4 flex items-center justify-between">
+              <h2 className="text-lg font-semibold text-slate-900 sm:text-xl">
+                Dados do cliente
+              </h2>
+              <SecondaryButton
+                type="button"
+                onClick={() => navigate(-1)}
+                className="hidden sm:inline-flex"
+              >
+                Voltar
+              </SecondaryButton>
+            </div>
 
-            <TextAreaField
-              label="Endereço de entrega"
-              placeholder="Rua, número, bairro, complemento..."
-              value={address}
-              onChange={(e) => setAddress(e.target.value)}
-            />
+            {/* Telefone */}
+            <div className="mb-4">
+              <PhoneField
+                label="Telefone celular"
+                value={phone}
+                onChange={setPhone}
+                placeholder="(00) 90000-0000"
+                required
+              />
+            </div>
 
-            <SectionCard
-              title="Pagamento"
-              className="border border-slate-100 bg-slate-50/60"
-            >
-              <FormField
-                label="Informações de pagamento"
-                placeholder="Ex.: pagamento na entrega, PIX, cartão..."
+            {/* Endereço */}
+            <div className="mb-4">
+              <label className="mb-1 block text-sm font-medium text-slate-700">
+                Endereço de entrega
+              </label>
+              <textarea
+                value={address}
+                onChange={(e) => setAddress(e.target.value)}
+                className="w-full rounded-lg border border-slate-300 px-3 py-2 text-sm shadow-sm outline-none transition focus:border-emerald-500 focus:ring-1 focus:ring-emerald-100"
+                rows={3}
+                placeholder="Rua, número, complemento, bairro, cidade..."
+              />
+            </div>
+
+            {/* Pagamento */}
+            <h2 className="mb-2 text-lg font-semibold text-slate-900 sm:text-xl">
+              Pagamento
+            </h2>
+            <div className="mb-4">
+              <label className="mb-1 block text-sm font-medium text-slate-700">
+                Informações de pagamento
+              </label>
+              <input
+                type="text"
                 value={paymentInfo}
                 onChange={(e) => setPaymentInfo(e.target.value)}
+                className="w-full rounded-lg border border-slate-300 px-3 py-2 text-sm shadow-sm outline-none transition focus:border-emerald-500 focus:ring-1 focus:ring-emerald-100"
+                placeholder="Ex.: pagamento em dinheiro, PIX, cartão na entrega..."
               />
-            </SectionCard>
+            </div>
 
-            <div className="mt-2 flex items-center justify-between text-sm font-semibold text-slate-900">
+            {/* Total */}
+            <div className="mt-4 flex items-center justify-between text-sm font-semibold text-slate-900">
               <span>Total</span>
               <span>
                 {totalCompra.toLocaleString('pt-BR', {
@@ -109,60 +173,95 @@ const ShoppingCart: React.FC = () => {
               </span>
             </div>
 
-            <button
+            <PrimaryButton
               type="button"
               onClick={handleConfirmOrder}
-              className="mt-3 inline-flex h-11 w-full items-center justify-center rounded-lg bg-emerald-600 px-4 text-sm font-semibold text-white shadow-sm transition hover:bg-emerald-700 active:scale-[0.98]"
+              fullWidth
+              className="mt-4"
             >
               Confirmar pedido
-            </button>
-          </div>
-        </SectionCard>
+            </PrimaryButton>
 
-        {/* Coluna direita: carrinho */}
-        <SectionCard title="Carrinho de compras" className="flex-1">
-          {!pratos || pratos.length === 0 ? (
-            <div className="mt-4 flex flex-1 flex-col items-center justify-center rounded-lg border border-dashed border-slate-200 bg-slate-50 px-4 py-8 text-center">
-              <p className="text-sm font-medium text-slate-700">
-                Seu carrinho está vazio.
-              </p>
-              <p className="mt-1 text-xs text-slate-500">
-                Adicione alguns pratos para visualizar aqui.
-              </p>
-            </div>
-          ) : (
-            <div className="mt-3 max-h-[24rem] space-y-3 overflow-y-auto pr-1">
-              {pratos.map((prato) => (
+            {/* Botão voltar (mobile) */}
+            <SecondaryButton
+              type="button"
+              onClick={() => navigate(-1)}
+              className="mt-3 w-full sm:hidden"
+            >
+              Voltar
+            </SecondaryButton>
+          </div>
+
+          {/* Lista de itens do carrinho */}
+          <div className="flex-1 rounded-lg border border-slate-200 bg-white p-4 shadow-sm sm:p-6">
+            <h2 className="mb-4 text-lg font-semibold text-slate-900 sm:text-xl">
+              Itens do carrinho
+            </h2>
+
+            <div className="max-h-96 space-y-3 overflow-y-auto pr-1">
+              {pratos?.map((prato) => (
                 <div
                   key={prato.id}
-                  className="flex items-center justify-between gap-3 border-b border-slate-100 pb-3"
+                  className="flex items-center justify-between border-b border-slate-100 pb-3 last:border-b-0"
                 >
-                  <div className="min-w-0">
-                    <h3 className="truncate text-sm font-semibold text-slate-900">
+                  <div className="pr-2">
+                    <h3 className="text-sm font-semibold text-slate-900">
                       {prato.nome}
                     </h3>
-                    {typeof prato.valor === 'number' && (
-                      <p className="mt-0.5 text-xs text-slate-500">
-                        {prato.valor.toLocaleString('pt-BR', {
-                          style: 'currency',
-                          currency: 'BRL',
-                        })}
-                      </p>
-                    )}
+                    <p className="text-xs text-slate-500">
+                      {prato.valor.toLocaleString('pt-BR', {
+                        style: 'currency',
+                        currency: 'BRL',
+                      })}
+                    </p>
                   </div>
 
-                  <QuantityInput
-                    value={prato.quantidade}
-                    min={0}
-                    onChange={(value) => handleQuantityChange(prato.id, value)}
-                  />
+                  <div className="flex items-center gap-2">
+                    <button
+                      type="button"
+                      onClick={() =>
+                        handleQuantityChange(prato.id, prato.quantidade - 1)
+                      }
+                      className="inline-flex h-8 w-8 items-center justify-center rounded-full border border-slate-300 text-sm font-semibold text-slate-700 hover:bg-slate-100"
+                    >
+                      -
+                    </button>
+                    <input
+                      type="number"
+                      value={prato.quantidade}
+                      onChange={(e) =>
+                        handleQuantityChange(
+                          prato.id,
+                          Number(e.target.value) || 0,
+                        )
+                      }
+                      className="w-14 rounded border border-slate-300 px-2 py-1 text-center text-sm"
+                      min={0}
+                    />
+                    <button
+                      type="button"
+                      onClick={() =>
+                        handleQuantityChange(prato.id, prato.quantidade + 1)
+                      }
+                      className="inline-flex h-8 w-8 items-center justify-center rounded-full border border-slate-300 text-sm font-semibold text-slate-700 hover:bg-slate-100"
+                    >
+                      +
+                    </button>
+                  </div>
                 </div>
               ))}
             </div>
-          )}
-        </SectionCard>
-      </div>
-    </CheckoutLayout>
+          </div>
+        </section>
+      )}
+
+      <Snackbar
+        message={snackbar.message}
+        type={snackbar.type}
+        duration={snackbar.duration}
+        onClose={clearSnackbar}
+      />
+    </PageLayout>
   );
 };
 
