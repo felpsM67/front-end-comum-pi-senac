@@ -1,5 +1,5 @@
 // src/utils/auth.ts
-import { Role } from '../domain/usuario';
+import { Role } from 'domain/usuario';
 
 export interface JwtPayload {
   sub?: string;
@@ -9,7 +9,12 @@ export interface JwtPayload {
   [key: string]: unknown;
 }
 
-export function parseJwtPayload(token: string): JwtPayload | null {
+export interface ParsedToken {
+  payload: JwtPayload;
+  isExpired: boolean;
+}
+
+export function parseJwtPayload(token: string): ParsedToken | null {
   try {
     const [, payloadBase64] = token.split('.');
     if (!payloadBase64) return null;
@@ -17,12 +22,11 @@ export function parseJwtPayload(token: string): JwtPayload | null {
     const json = atob(payloadBase64);
     const payload = JSON.parse(json) as JwtPayload;
 
-    // valida expiração (opcional, se quiser usar aqui)
-    if (payload.exp && payload.exp * 1000 < Date.now()) {
-      return null;
-    }
+    const now = Date.now();
+    const expMs = payload.exp ? payload.exp * 1000 : null;
+    const isExpired = expMs !== null ? expMs < now : false;
 
-    return payload;
+    return { payload, isExpired };
   } catch (error) {
     console.error('Erro ao decodificar JWT', error);
     return null;

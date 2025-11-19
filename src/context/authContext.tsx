@@ -51,22 +51,29 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
       const token = localStorage.getItem(AUTH_TOKEN_KEY);
       if (!token) return;
 
-      const payload = parseJwtPayload(token);
+      const parsed = parseJwtPayload(token);
+      const payload = parsed?.payload;
       if (!payload) {
         clearAuthStorage();
         setUsuario(null);
         return;
       }
 
-      const role = (payload.role as Role) ?? 'CLIENTE';
+      const role = (payload.role as Role | string | undefined) ?? 'CLIENTE';
 
       const user: Usuario = {
         id: String(payload.sub ?? ''),
         email: payload.email,
-        role,
+        role: role as Role,
       };
 
       setUsuario(user);
+      // if (isExpired) {
+      //   // 🔎 Opcional: só log de debug, sem deslogar
+      //   if (process.env.NODE_ENV === 'development') {
+      //     console.warn('[AuthProvider] Token carregado está expirado. O refresh será tratado via interceptor quando a API retornar 401.');
+      //   }
+      // }
     } catch (error) {
       console.error('Erro ao inicializar AuthContext:', error);
       clearAuthStorage();

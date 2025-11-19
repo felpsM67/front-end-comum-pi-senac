@@ -29,7 +29,8 @@ async function loginBase(email: string, senha: string): Promise<LoginResult> {
   localStorage.setItem('refreshToken', refreshToken);
 
   // decodifica payload do JWT
-  const payload = parseJwtPayload(token);
+  const parsed = parseJwtPayload(token);
+  const payload = parsed?.payload;
 
   const role = (payload?.role as Role) ?? 'CLIENTE';
   const usuario: Usuario = {
