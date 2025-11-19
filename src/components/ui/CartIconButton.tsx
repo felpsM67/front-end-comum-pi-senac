@@ -1,44 +1,62 @@
+// src/components/ui/CartIconButton.tsx
 import React from 'react';
+import { Link } from 'react-router-dom';
 import { FiShoppingCart } from 'react-icons/fi';
-import { CartContext } from '../../context/cartContext';
-import { useNavigate } from 'react-router-dom';
 
-interface CartIconButtonProps {
-  size?: number;
+export interface CartIconButtonProps {
+  /** Rota para onde o botão deve navegar (usa <Link />) */
+  to?: string;
+  /** Handler opcional caso você queira tratar o click na mão */
+  onClick?: () => void;
+  /** Quantidade de itens no carrinho (mostrada no badge) */
+  count?: number;
+  /** Classe extra para estilização adicional */
+  className?: string;
 }
 
-const CartIconButton: React.FC<CartIconButtonProps> = ({ size = 22 }) => {
-  const cartContext = React.useContext(CartContext);
-  const navigate = useNavigate();
-
-  if (!cartContext) throw new Error('CartContext não está disponível');
-
-  const { pratos } = cartContext;
-
-  const totalQuantidade =
-    pratos?.reduce((sum, p) => sum + p.quantidade, 0) || 0;
-
-  return (
-    <button
-      onClick={() => navigate('/carrinho')}
-      className="relative bg-gray-200 text-gray-700 p-2 rounded-full hover:bg-gray-300 transition"
+const CartIconButton: React.FC<CartIconButtonProps> = ({
+  to,
+  onClick,
+  count = 0,
+  className = '',
+}) => {
+  const content = (
+    <div
+      className={`
+        relative inline-flex h-10 w-10 items-center justify-center
+        rounded-full border border-slate-200 bg-white text-slate-700
+        shadow-sm transition hover:bg-slate-50
+        ${className}
+      `}
+      onClick={onClick}
     >
-      <FiShoppingCart size={size} />
+      <FiShoppingCart size={18} />
 
-      {totalQuantidade > 0 && (
+      {count > 0 && (
         <span
           className="
-          absolute -top-1.5 -right-1.5 
-          bg-red-500 text-white text-[10px]
-          h-5 w-5 rounded-full flex items-center justify-center
-          font-bold shadow
-        "
+            absolute -right-1 -top-1 min-h-[1.1rem] min-w-[1.1rem]
+            rounded-full bg-emerald-500 px-1.5 text-center
+            text-[0.65rem] font-semibold text-white
+            flex items-center justify-center
+          "
         >
-          {totalQuantidade}
+          {count > 99 ? '99+' : count}
         </span>
       )}
-    </button>
+    </div>
   );
+
+  // Se tiver `to`, renderiza como Link; senão, só o conteúdo clicável
+  if (to) {
+    return (
+      <Link to={to} aria-label="Ir para o carrinho">
+        {content}
+      </Link>
+    );
+  }
+
+  return content;
 };
 
 export default CartIconButton;

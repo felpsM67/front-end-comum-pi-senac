@@ -1,7 +1,8 @@
 import React from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
+import useCart from '../hooks/useCart';
 
-import { CartContext, PratoCarrinho } from '../context/cartContext';
+import { PratoCarrinho } from '../context/cartContext';
 import { useAsyncResource } from '../hooks/useAsyncResource';
 import useSnackbar from '../hooks/useSnackbar';
 
@@ -25,12 +26,7 @@ const DetalhesPrato: React.FC = () => {
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
 
-  const cartContext = React.useContext(CartContext);
-  if (!cartContext) {
-    throw new Error('CartContext não está disponível');
-  }
-
-  const { pratos: pratosNoCarrinho, adicionarPrato } = cartContext;
+  const { pratos: pratosNoCarrinho, adicionarPrato } = useCart();
 
   const { snackbar, showSuccess, showError, clearSnackbar } = useSnackbar(4000);
 

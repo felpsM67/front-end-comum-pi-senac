@@ -1,15 +1,11 @@
-import React, { useContext } from 'react';
+import React from 'react';
 import { NavLink, Outlet } from 'react-router-dom';
-import { CartContext } from '../../context/cartContext';
 import UserMenu from '../ui/UserMenu';
 import CartIconButton from '../ui/CartIconButton';
+import useCart from '../../hooks/useCart';
 
 const PublicLayout: React.FC = () => {
-  const cartContext = useContext(CartContext);
-
-  if (!cartContext) {
-    throw new Error('CartContext não está disponível');
-  }
+  const { totalItens } = useCart();
 
   return (
     <div className="flex min-h-screen flex-col bg-slate-50">
@@ -27,7 +23,7 @@ const PublicLayout: React.FC = () => {
 
         {/* Ações à direita */}
         <div className="flex items-center gap-3">
-          <CartIconButton />
+          <CartIconButton to="/carrinho" count={totalItens} />
           <UserMenu />
         </div>
       </header>

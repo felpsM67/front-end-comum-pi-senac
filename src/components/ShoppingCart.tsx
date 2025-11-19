@@ -2,8 +2,6 @@
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 
-import { CartContext } from '../context/cartContext';
-
 import PageLayout from './layout/PageLayout';
 import Snackbar from './Snackbar';
 import EmptyState from './ui/EmptyState';
@@ -12,16 +10,12 @@ import PrimaryButton from './ui/PrimaryButton';
 import SecondaryButton from './ui/SecondaryButton';
 
 import useSnackbar from '../hooks/useSnackbar';
+import useCart from '../hooks/useCart';
 
 const ShoppingCart: React.FC = () => {
-  const cartContext = React.useContext(CartContext);
   const navigate = useNavigate();
 
-  if (!cartContext) {
-    throw new Error('CartContext não está disponível');
-  }
-
-  const { pratos, totalCompra, removerPrato, adicionarPrato } = cartContext;
+  const { pratos, adicionarPrato, removerPrato, totalCompra } = useCart();
 
   const [address, setAddress] = useState<string>('');
   const [paymentInfo, setPaymentInfo] = useState<string>('');
