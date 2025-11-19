@@ -1,33 +1,34 @@
 // src/utils/auth.ts
+import { Role } from 'domain/usuario';
+
 export interface JwtPayload {
-  exp: number;
   sub?: string;
-  role?: string;
+  email?: string;
+  role?: Role | string;
+  exp?: number;
   [key: string]: unknown;
 }
 
-export function parseJwt<T = JwtPayload>(token: string): T | null {
+export interface ParsedToken {
+  payload: JwtPayload;
+  isExpired: boolean;
+}
+
+export function parseJwtPayload(token: string): ParsedToken | null {
   try {
     const [, payloadBase64] = token.split('.');
     if (!payloadBase64) return null;
 
-    const json = atob(payloadBase64.replace(/-/g, '+').replace(/_/g, '/'));
-    return JSON.parse(json) as T;
+    const json = atob(payloadBase64);
+    const payload = JSON.parse(json) as JwtPayload;
+
+    const now = Date.now();
+    const expMs = payload.exp ? payload.exp * 1000 : null;
+    const isExpired = expMs !== null ? expMs < now : false;
+
+    return { payload, isExpired };
   } catch (error) {
-    console.error('Erro ao decodificar o token:', error);
+    console.error('Erro ao decodificar JWT', error);
     return null;
   }
-}
-
-export function isTokenValid(token: string | null): boolean {
-  if (!token) return false;
-  const payload = parseJwt<JwtPayload>(token);
-  if (!payload?.exp) return false;
-
-  const isExpired = payload.exp * 1000 < Date.now();
-  if (isExpired) {
-    localStorage.removeItem('token');
-    return false;
-  }
-  return true;
 }
