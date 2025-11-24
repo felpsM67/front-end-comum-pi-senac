@@ -1,12 +1,5 @@
 // src/context/cartContext.tsx
-import React, {
-  createContext,
-  ReactNode,
-  useCallback,
-  useEffect,
-  useMemo,
-  useState,
-} from 'react';
+import React, { createContext, ReactNode, useEffect, useState } from 'react';
 
 export interface PratoCarrinho {
   id: number;
@@ -19,25 +12,18 @@ interface CartContextType {
   pratos: PratoCarrinho[];
   adicionarPrato: (prato: PratoCarrinho) => void;
   removerPrato: (pratoId: number) => void;
-  limparCarrinho: () => void;
+  clearCart: () => void;
   totalCompra: number;
-  totalItens: number;
 }
+
+const CART_STORAGE_KEY = 'cart-items';
 
 export const CartContext = createContext<CartContextType | undefined>(
   undefined,
 );
 
-const CART_STORAGE_KEY = 'app:cart';
-
-interface CartProviderProps {
-  children: ReactNode;
-}
-
-export const CartProvider: React.FC<CartProviderProps> = ({ children }) => {
-  // 🧠 estado SEM null – sempre array
+export const CartProvider = ({ children }: { children: ReactNode }) => {
   const [pratos, setPratos] = useState<PratoCarrinho[]>(() => {
-    if (typeof window === 'undefined') return [];
     try {
       const stored = localStorage.getItem(CART_STORAGE_KEY);
       return stored ? (JSON.parse(stored) as PratoCarrinho[]) : [];
@@ -46,71 +32,48 @@ export const CartProvider: React.FC<CartProviderProps> = ({ children }) => {
     }
   });
 
-  // ♻️ persiste no localStorage sempre que mudar
+  // persiste no localStorage
   useEffect(() => {
     try {
       localStorage.setItem(CART_STORAGE_KEY, JSON.stringify(pratos));
     } catch {
-      // se der erro (quota, privado, etc.), a app segue funcionando
-      console.warn('Não foi possível salvar o carrinho no localStorage.');
+      // ignora em modo privado, etc.
     }
   }, [pratos]);
 
-  const adicionarPrato = useCallback((prato: PratoCarrinho) => {
+  const adicionarPrato = (prato: PratoCarrinho) => {
     setPratos((prev) => {
-      const lista = prev ?? [];
-      const idx = lista.findIndex((p) => p.id === prato.id);
-
-      // não existe ainda → adiciona
-      if (idx === -1) {
-        return [...lista, prato];
+      const existing = prev.find((p) => p.id === prato.id);
+      if (!existing) {
+        return [...prev, prato];
       }
-
-      // const atual = lista[idx];
-
-      // aqui tratamos `prato.quantidade` como quantidade “final” (absoluta)
-      const quantidadeFinal = prato.quantidade;
-
-      // se quantidade <= 0, removemos o item
-      if (quantidadeFinal <= 0) {
-        return lista.filter((p) => p.id !== prato.id);
-      }
-
-      // atualiza quantidade
-      return lista.map((p) =>
-        p.id === prato.id ? { ...p, quantidade: quantidadeFinal } : p,
+      return prev.map((p) =>
+        p.id === prato.id
+          ? { ...p, quantidade: p.quantidade + prato.quantidade }
+          : p,
       );
     });
-  }, []);
+  };
 
-  const removerPrato = useCallback((pratoId: number) => {
+  const removerPrato = (pratoId: number) => {
     setPratos((prev) => prev.filter((p) => p.id !== pratoId));
-  }, []);
+  };
 
-  const limparCarrinho = useCallback(() => {
+  const clearCart = () => {
     setPratos([]);
-  }, []);
+    try {
+      localStorage.removeItem(CART_STORAGE_KEY);
+    } catch {
+      // ignore
+    }
+  };
 
-  const totalCompra = useMemo(
-    () => pratos.reduce((sum, dish) => sum + dish.valor * dish.quantidade, 0),
-    [pratos],
-  );
-
-  const totalItens = useMemo(
-    () => pratos.reduce((sum, dish) => sum + dish.quantidade, 0),
-    [pratos],
-  );
+  const totalCompra =
+    pratos.reduce((sum, dish) => sum + dish.valor * dish.quantidade, 0) || 0;
 
   return (
     <CartContext.Provider
-      value={{
-        pratos,
-        adicionarPrato,
-        removerPrato,
-        limparCarrinho,
-        totalCompra,
-        totalItens,
-      }}
+      value={{ pratos, adicionarPrato, removerPrato, clearCart, totalCompra }}
     >
       {children}
     </CartContext.Provider>
