@@ -1,5 +1,5 @@
 // src/context/cartContext.tsx
-import React, { createContext, ReactNode, useEffect, useState } from 'react';
+import React, { createContext, ReactNode, useCallback, useEffect, useState } from 'react';
 
 export interface PratoCarrinho {
   id: number;
@@ -41,19 +41,41 @@ export const CartProvider = ({ children }: { children: ReactNode }) => {
     }
   }, [pratos]);
 
-  const adicionarPrato = (prato: PratoCarrinho) => {
+  const adicionarPrato = useCallback((prato: PratoCarrinho) => {
     setPratos((prev) => {
-      const existing = prev.find((p) => p.id === prato.id);
-      if (!existing) {
-        return [...prev, prato];
+      const lista = prev ?? [];
+      const idx = lista.findIndex((p) => p.id === prato.id);
+
+      // não existe ainda → adiciona
+      if (idx === -1) {
+        return [...lista, prato];
       }
-      return prev.map((p) =>
-        p.id === prato.id
-          ? { ...p, quantidade: p.quantidade + prato.quantidade }
-          : p,
+
+      // const atual = lista[idx];
+
+      // aqui tratamos `prato.quantidade` como quantidade “final” (absoluta)
+      const quantidadeFinal = prato.quantidade;
+
+      // se quantidade <= 0, removemos o item
+      if (quantidadeFinal <= 0) {
+        return lista.filter((p) => p.id !== prato.id);
+      }
+
+      // atualiza quantidade
+      return lista.map((p) =>
+        p.id === prato.id ? { ...p, quantidade: quantidadeFinal } : p,
       );
     });
-  };
+  }, []);
+      // const existing = prev.find((p) => p.id === prato.id);
+      // if (!existing) {
+      //   return [...prev, prato];
+      // }
+      // return prev.map((p) =>
+      //   p.id === prato.id
+      //     ? { ...p, quantidade: p.quantidade + prato.quantidade }
+      //     : p,
+      // );
 
   const removerPrato = (pratoId: number) => {
     setPratos((prev) => prev.filter((p) => p.id !== pratoId));

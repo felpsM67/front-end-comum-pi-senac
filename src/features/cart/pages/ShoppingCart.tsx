@@ -2,15 +2,15 @@
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 
-import PageLayout from 'shared/layout/PageLayout';
 import Snackbar from 'shared/feedback/Snackbar';
-import EmptyState from 'shared/ui/EmptyState';
 import PhoneField from 'shared/form/PhoneField'; // ajuste o caminho se estiver diferente
+import PageLayout from 'shared/layout/PageLayout';
+import EmptyState from 'shared/ui/EmptyState';
 import PrimaryButton from 'shared/ui/PrimaryButton';
 import SecondaryButton from 'shared/ui/SecondaryButton';
 
-import useSnackbar from 'hooks/useSnackbar';
 import useCart from 'hooks/useCart';
+import useSnackbar from 'hooks/useSnackbar';
 
 const ShoppingCart: React.FC = () => {
   const navigate = useNavigate();
