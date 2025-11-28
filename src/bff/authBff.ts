@@ -1,6 +1,6 @@
 // src/bff/authBff.ts
-import api from 'http/api';
 import Usuario, { Role } from 'domain/usuario';
+import api from 'http/api';
 import { parseJwtPayload } from 'utils/auth';
 
 export interface LoginResult {
@@ -10,9 +10,13 @@ export interface LoginResult {
 }
 
 interface LoginApiResponse {
-  token: string;
-  refreshToken: string;
-  message?: string;
+  data: {
+    token: string;
+    refreshToken: string;
+    message?: string;
+    user?: unknown;
+  };
+  links?: unknown;
 }
 
 // função base para login na API
@@ -22,7 +26,9 @@ async function loginBase(email: string, senha: string): Promise<LoginResult> {
     senha,
   });
 
-  const { token, refreshToken } = response.data;
+  const {
+    data: { token, refreshToken },
+  } = response.data;
 
   // persiste tokens
   localStorage.setItem('token', token);
