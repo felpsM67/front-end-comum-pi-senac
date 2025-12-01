@@ -11,7 +11,7 @@ export interface LoginResult {
 
 interface LoginApiResponse {
   data: {
-    token: string;
+    accessToken: string;
     refreshToken: string;
     message?: string;
     user?: unknown;
@@ -27,15 +27,15 @@ async function loginBase(email: string, senha: string): Promise<LoginResult> {
   });
 
   const {
-    data: { token, refreshToken },
+    data: { accessToken, refreshToken },
   } = response.data;
 
   // persiste tokens
-  localStorage.setItem('token', token);
+  localStorage.setItem('token', accessToken);
   localStorage.setItem('refreshToken', refreshToken);
 
   // decodifica payload do JWT
-  const parsed = parseJwtPayload(token);
+  const parsed = parseJwtPayload(accessToken);
   const payload = parsed?.payload;
 
   const role = (payload?.role as Role) ?? 'CLIENTE';
@@ -45,7 +45,7 @@ async function loginBase(email: string, senha: string): Promise<LoginResult> {
     role,
   };
 
-  return { token, refreshToken, usuario };
+  return { token: accessToken, refreshToken, usuario };
 }
 
 /**
