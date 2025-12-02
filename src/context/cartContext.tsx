@@ -1,5 +1,11 @@
 // src/context/cartContext.tsx
-import React, { createContext, ReactNode, useCallback, useEffect, useState } from 'react';
+import React, {
+  createContext,
+  ReactNode,
+  useCallback,
+  useEffect,
+  useState,
+} from 'react';
 
 export interface PratoCarrinho {
   id: number;
@@ -51,8 +57,6 @@ export const CartProvider = ({ children }: { children: ReactNode }) => {
         return [...lista, prato];
       }
 
-      // const atual = lista[idx];
-
       // aqui tratamos `prato.quantidade` como quantidade “final” (absoluta)
       const quantidadeFinal = prato.quantidade;
 
@@ -67,15 +71,6 @@ export const CartProvider = ({ children }: { children: ReactNode }) => {
       );
     });
   }, []);
-      // const existing = prev.find((p) => p.id === prato.id);
-      // if (!existing) {
-      //   return [...prev, prato];
-      // }
-      // return prev.map((p) =>
-      //   p.id === prato.id
-      //     ? { ...p, quantidade: p.quantidade + prato.quantidade }
-      //     : p,
-      // );
 
   const removerPrato = (pratoId: number) => {
     setPratos((prev) => prev.filter((p) => p.id !== pratoId));
@@ -92,6 +87,18 @@ export const CartProvider = ({ children }: { children: ReactNode }) => {
 
   const totalCompra =
     pratos.reduce((sum, dish) => sum + dish.valor * dish.quantidade, 0) || 0;
+
+  useEffect(() => {
+    try {
+      if (pratos) {
+        localStorage.setItem(CART_STORAGE_KEY, JSON.stringify(pratos));
+      } else {
+        localStorage.removeItem(CART_STORAGE_KEY);
+      }
+    } catch {
+      // ignore
+    }
+  }, [pratos]);
 
   return (
     <CartContext.Provider
