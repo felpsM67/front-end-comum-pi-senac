@@ -10,13 +10,10 @@ export interface LoginResult {
 }
 
 interface LoginApiResponse {
-  data: {
-    accessToken: string;
-    refreshToken: string;
-    message?: string;
-    user?: unknown;
-  };
-  links?: unknown;
+  token: string;
+  refreshToken: string;
+  message?: string;
+  user?: unknown;
 }
 
 // função base para login na API
@@ -27,15 +24,15 @@ async function loginBase(email: string, senha: string): Promise<LoginResult> {
   });
 
   const {
-    data: { accessToken, refreshToken },
+    token, refreshToken
   } = response.data;
 
   // persiste tokens
-  localStorage.setItem('token', accessToken);
+  localStorage.setItem('token', token);
   localStorage.setItem('refreshToken', refreshToken);
 
   // decodifica payload do JWT
-  const parsed = parseJwtPayload(accessToken);
+  const parsed = parseJwtPayload(token);
   const payload = parsed?.payload;
 
   const role = (payload?.role as Role) ?? 'CLIENTE';
@@ -45,7 +42,7 @@ async function loginBase(email: string, senha: string): Promise<LoginResult> {
     role,
   };
 
-  return { token: accessToken, refreshToken, usuario };
+  return { token: token, refreshToken, usuario };
 }
 
 /**
