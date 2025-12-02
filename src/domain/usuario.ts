@@ -5,4 +5,5 @@ export default interface Usuario {
   id: string;
   role: Role;
   email?: string;
+  nome?: string;
 }

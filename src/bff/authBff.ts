@@ -18,32 +18,31 @@ interface LoginApiResponse {
 
 // função base para login na API
 async function loginBase(email: string, senha: string): Promise<LoginResult> {
-  const response = await api.post<LoginApiResponse>('/login', {
-    email,
-    senha,
-  });
+  const response = await api.post<LoginApiResponse>('/login', { email, senha });
 
-  const {
-    token, refreshToken
-  } = response.data;
+  const { token, refreshToken } = response.data;
 
-  // persiste tokens
   localStorage.setItem('token', token);
   localStorage.setItem('refreshToken', refreshToken);
 
-  // decodifica payload do JWT
   const parsed = parseJwtPayload(token);
   const payload = parsed?.payload;
 
   const role = (payload?.role as Role) ?? 'CLIENTE';
+
+  // 🔎 chamada extra para buscar dados completos
+  const userResponse = await api.get<Usuario>(`/usuarios/${payload?.sub}`);
+
   const usuario: Usuario = {
     id: String(payload?.sub ?? ''),
     email: payload?.email,
     role,
+    nome: userResponse.data.nome, // ✅ agora vem da tabela
   };
 
-  return { token: token, refreshToken, usuario };
+  return { token, refreshToken, usuario };
 }
+
 
 /**
  * Login para área ADMIN (GERENTE / FUNCIONARIO)

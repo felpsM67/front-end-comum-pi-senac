@@ -18,6 +18,7 @@ import AdminLoginPage from 'features/auth/pages/AdminLoginPage';
 import ClientLoginPage from 'features/auth/pages/ClienteLoginPage';
 import LogoutPage from 'features/auth/pages/LogoutPage';
 import ProtectedRoute from 'shared/routing/ProtectedRoute';
+import DetalhesUsers from 'features/menu/pages/DetalhesUsers';
 
 export interface RouteConfig {
   path: string;
@@ -46,6 +47,10 @@ const routes: RouteConfig[] = [
       {
         path: '/detalhes/:id',
         element: <DetalhesPrato />,
+      },
+      {
+        path: '/usuario/detalhes',
+        element: <DetalhesUsers />,
       },
       {
         path: '/carrinho',
